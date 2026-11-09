@@ -2,9 +2,9 @@
 
 ## 1. Project idea
 
-ContextOps gives a software team and its AI assistants one shared, trusted place for project knowledge. Decisions, requirements, constraints, research, open questions, rejected approaches, and project progress are kept in a GitHub repository.
+ContextOps is a shared, trusted project context for teammates using different AI assistants, such as ChatGPT and Claude. It carries forward important outcomes from iterative conversations so the next person or AI knows both what the team decided and why.
 
-Changes are proposed and reviewed through pull requests. Only approved, published context is available to AI assistants through MCP. This helps separate AI sessions use the same project facts without copying chat history between them.
+For example, Person A may discuss PostgreSQL versus MySQL with ChatGPT over several rounds. ContextOps captures the final decision, the reasoning, constraints, alternatives considered, and the useful discussion trail. After team review and publication, Person B can ask Claude Code for project context and receive the approved decision with its rationale. The same approach applies to other team knowledge, not only database choices.
 
 ## 2. Product priorities
 
@@ -13,6 +13,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 **Core product (must work):**
 - Connect a ContextOps project to a GitHub context repository.
 - Store and browse seven record types: Decision, Requirement, Constraint, Research, Rejected Approach, Open Question, and Project State.
+- Preserve each context item's reasoning trail: the question, final outcome, rationale, constraints, alternatives/tradeoffs, and selected discussion notes or source references.
 - Search and filter records.
 - Propose changes through pull requests, validate them, and require human review.
 - Publish approved context as a versioned release.
@@ -30,6 +31,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 ### Phase 1 — Define the knowledge model and user flow
 
 - Confirm what each of the seven record types means and which fields are required.
+- Define shared fields that preserve reasoning: the problem/question, outcome, rationale, constraints, alternatives and tradeoffs, and selected discussion excerpts or source references.
 - Decide how records are organized in Markdown with YAML front matter.
 - Define the user flow: create project → connect repository → browse context → propose change → review → publish → retrieve through MCP.
 - Draw the basic architecture and agree on what belongs in the app versus the context repository.
@@ -44,6 +46,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 - Build the dashboard to list and view records.
 - Add keyword search and metadata filters.
 - Add create/edit proposal entry points for all seven record types.
+- Let a teammate turn an important AI discussion into a context proposal, including its decision trail and selected supporting conversation notes.
 
 **Deliverable:** Users can connect a repository and explore structured project knowledge.
 
@@ -142,13 +145,13 @@ If the available time is short, reduce dashboard polish and infrastructure depth
 
 ## 6. End-to-end project demonstration
 
-1. Open a project and show its approved context and current Project State.
-2. Propose a PostgreSQL decision through the dashboard or an MCP client.
+1. Person A explores PostgreSQL versus MySQL with ChatGPT through several rounds of discussion.
+2. Person A submits a context proposal capturing the question, chosen database, reasons, constraints, alternatives, and relevant discussion notes or references.
 3. Show the GitHub pull request and automated validation.
-4. Have a human approve and merge it; show the published release.
-5. Ask a separate AI client to retrieve the decision and its rationale through MCP.
-6. Submit a conflicting database proposal and show the warning for human review.
-7. Publish a Project State handoff and retrieve it from another AI session.
+4. Person B reviews and approves it; ContextOps publishes the approved context.
+5. Person B opens Claude Code and asks how the project should use a database. Claude retrieves the approved decision and rationale through MCP.
+6. If someone proposes a conflicting choice, ContextOps flags it for team review.
+7. Repeat the cross-person, cross-assistant flow for another project topic or a Project State handoff.
 8. Show the app running through Docker Compose and on Kubernetes, with Jenkins status and basic health monitoring.
 9. Restore the earlier approved release and confirm MCP now serves that version.
 
@@ -160,6 +163,7 @@ If the available time is short, reduce dashboard polish and infrastructure depth
 - [ ] Automated validation blocks invalid context from publication.
 - [ ] MCP retrieval serves only the active approved release.
 - [ ] Two independent AI sessions can retrieve the same approved decision.
+- [ ] Context items preserve the question, decision, reasoning, constraints, alternatives, and useful conversation/source references.
 - [ ] Conflicting proposals are flagged for human review.
 - [ ] Project State handoffs can be approved and retrieved.
 - [ ] Release history and rollback work without deleting Git history.
@@ -200,4 +204,5 @@ These are planning decisions for the first version. They can be adjusted if a co
 4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
 
 This document is a plan, not a record of completed implementation. Confirm with the mentor whether Jenkins is required instead of GitHub Actions and whether the proposed local Kubernetes, Terraform, and Ansible demonstrations satisfy the course expectations.
+
 
