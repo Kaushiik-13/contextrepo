@@ -1,217 +1,179 @@
-# ContextOps — Implementation Plan
+# ContextOps — Project-Focused Implementation Plan
 
-## 1. Project goal
+## 1. Project idea
 
-Build a small working platform that lets a software team store project knowledge in GitHub, review proposed changes, publish approved versions, and let separate AI assistants retrieve the same approved information.
+ContextOps gives a software team and its AI assistants one shared, trusted place for project knowledge. Decisions, requirements, constraints, research, open questions, rejected approaches, and project progress are kept in a GitHub repository.
 
-The project should also demonstrate the five DevOps syllabus units. The finished demonstration should show the full path from a proposed knowledge change to an approved release running in a containerized deployment.
+Changes are proposed and reviewed through pull requests. Only approved, published context is available to AI assistants through MCP. This helps separate AI sessions use the same project facts without copying chat history between them.
 
-## 2. What the completed project should do
+## 2. Product priorities
 
-A user should be able to:
+Build the ContextOps product first. Use DevOps tools to deliver and run that product; don’t let infrastructure work become the main project.
 
-1. Connect a ContextOps project to a GitHub context repository.
-2. Create and browse seven record types: Decision, Requirement, Constraint, Research, Rejected Approach, Open Question, and Project State.
-3. Search records by keyword and metadata.
-4. Propose a record change. ContextOps creates a Git branch and pull request; a human reviews and merges it in GitHub.
-5. Automatically validate the proposed files. Invalid content must not be published.
-6. Retrieve only the currently published, approved context through MCP.
-7. See release history and restore an earlier approved release.
-8. Show project progress, blockers, next actions, and handoff notes to another AI session.
+**Core product (must work):**
+- Connect a ContextOps project to a GitHub context repository.
+- Store and browse seven record types: Decision, Requirement, Constraint, Research, Rejected Approach, Open Question, and Project State.
+- Search and filter records.
+- Propose changes through pull requests, validate them, and require human review.
+- Publish approved context as a versioned release.
+- Let independent AI clients retrieve only the active approved release through MCP.
+- Support project progress handoffs, release history, and rollback.
 
-## 3. Build order
+**Supporting delivery (keep small):**
+- Run locally in Docker Compose.
+- Use Jenkins for course-aligned automated checks and builds.
+- Demonstrate deployment on Kubernetes.
+- Add only a small Ansible/Terraform setup and basic monitoring needed for the course demo.
 
-Follow this order so each stage has something usable before the next stage depends on it.
+## 3. Build sequence
 
-### Stage 1 — Confirm the design and prepare the repositories
+### Phase 1 — Define the knowledge model and user flow
 
-**Work to plan and complete**
-- Decide the app structure: dashboard, backend/API and MCP service.
-- Decide how the app stores its project configuration and GitHub connection.
-- Keep the application repository separate from the linked context repository.
-- Define the seven record formats, required metadata, folder structure, and validation rules.
-- Draw a simple architecture and user workflow before implementation.
+- Confirm what each of the seven record types means and which fields are required.
+- Decide how records are organized in Markdown with YAML front matter.
+- Define the user flow: create project → connect repository → browse context → propose change → review → publish → retrieve through MCP.
+- Draw the basic architecture and agree on what belongs in the app versus the context repository.
 
-**Deliverables**
-- Architecture diagram and repository layout.
-- Example records for all seven types.
-- Agreed API/MCP responsibilities and a list of required secrets/configuration.
+**Deliverable:** A small design document, sample records, and a clear folder/schema proposal.
 
-**Done when** the team can explain where source files, context records, pull requests, published releases, and project state live.
+**Complete when:** A reviewer can understand how a piece of knowledge moves from draft to approved release.
 
-### Stage 2 — Build the smallest useful application
+### Phase 2 — Create and browse project context
 
-**Work to plan and complete**
-- Create the project setup and connect it to a GitHub context repository.
-- Build basic dashboard pages to list, view, filter, and search context records.
-- Add a form or API path to propose a new or updated record.
-- Create a branch and pull request for each proposal; do not let the app approve or merge it.
-- Add validation for required fields, metadata, file structure, and references.
+- Build project setup and GitHub repository linking.
+- Build the dashboard to list and view records.
+- Add keyword search and metadata filters.
+- Add create/edit proposal entry points for all seven record types.
 
-**Deliverables**
-- Working project setup and context browser.
-- Proposal-to-pull-request workflow.
-- Automated validation result visible to the reviewer.
+**Deliverable:** Users can connect a repository and explore structured project knowledge.
 
-**Done when** a user can submit a valid proposal, see its pull request and validation result, and invalid content is blocked from publication.
+**Complete when:** The seven record types can be represented and browsed in the app.
 
-### Stage 3 — Publish approved context and serve it through MCP
+### Phase 3 — Add review and trust controls
 
-**Work to plan and complete**
-- After a reviewed pull request is merged, publish an immutable release tied to a Git commit or tag.
-- Keep one active release reference per project.
-- If publication fails, keep serving the last successful release.
-- Implement MCP read tools that fetch the active published release only.
-- Implement an MCP proposal tool that creates a proposal/pull request but cannot approve, merge, or switch the active release.
-- Return source references and release/version details with retrieved records.
+- Make proposals create a branch and pull request in GitHub.
+- Validate required fields, metadata, file layout, and references automatically.
+- Show validation status and pull-request status in the dashboard.
+- Keep approval and merge authority in GitHub; the app and MCP proposal tool cannot approve or merge changes.
+- Flag possible conflicting decisions for human review.
 
-**Deliverables**
-- Release workflow and release history.
-- MCP retrieval and proposal operations.
-- Permission boundary between proposing and approving.
+**Deliverable:** A safe proposal workflow backed by GitHub pull requests and automated validation.
 
-**Done when** two independent AI clients retrieve the same approved decision, and draft pull request content is not returned by normal MCP retrieval.
+**Complete when:** Invalid or unreviewed proposals cannot silently become active context.
 
-### Stage 4 — Add Project State and rollback
+### Phase 4 — Publish approved context and build MCP retrieval
 
-**Work to plan and complete**
-- Add Project State records for completed work, in-progress work, blockers, and next actions.
-- Require Project State updates to use the same proposal, review, and publication flow.
-- Add a reviewer action to select a previous approved release and point the project back to it.
-- Record who/what initiated the rollback and which release became active.
+- Publish a merged, valid change as an immutable Git tag or commit-pinned release.
+- Track one active published release per project.
+- If publishing fails, continue serving the previous successful release.
+- Implement MCP retrieval from the active published release only.
+- Include version and source references in retrieval results.
+- Implement MCP proposal submission separately from read access.
 
-**Deliverables**
-- Project State view and handoff workflow.
-- Release history and rollback action with an audit record.
+**Deliverable:** An independent AI assistant can retrieve the same approved project facts as another assistant.
 
-**Done when** a second AI session can retrieve an approved handoff, and a prior release can be restored without deleting Git history.
+**Complete when:** Two separate AI sessions return the same approved decision, while draft pull-request content remains hidden from normal retrieval.
 
-### Stage 5 — Package and automate delivery
+### Phase 5 — Add project progress and recovery
 
-**Work to plan and complete**
-- Add Dockerfiles for the required services and Docker Compose for local development.
-- Create a Jenkins pipeline aligned with the syllabus. It should validate context, run application checks, build container images, and publish approved releases.
-- Use Jenkins credentials or the chosen secret store for tokens; never commit credentials.
-- Configure pull request checks so failed validation prevents publication.
+- Use Project State records for completed work, current work, blockers, and next actions.
+- Submit handoff updates through the same review and release process as other records.
+- Show release history and let a reviewer restore an earlier approved release.
+- Keep an audit record of rollback actions; preserve all Git history.
 
-**Deliverables**
-- Repeatable local Docker Compose setup.
-- Jenkins pipeline and documented stages.
-- Container image build and release process.
+**Deliverable:** A reliable handoff and recovery workflow.
 
-**Done when** a pull request triggers checks, a failure blocks release, and a valid merged change can be built and published reproducibly.
+**Complete when:** A second AI session can retrieve an approved handoff, and the team can restore and serve an earlier approved context version.
 
-### Stage 6 — Demonstrate Kubernetes, Ansible, and Terraform
+### Phase 6 — Make the product easy to run and demonstrate
 
-**Work to plan and complete**
-- Choose a local Kubernetes environment suitable for a student demo.
-- Write Kubernetes configuration for the dashboard/API/MCP services, including Deployments, Services, and health probes.
-- Use Terraform for a small, repeatable demo infrastructure setup. Choose the exact provider/resources during design; keep it local and avoid paid cloud resources unless explicitly required.
-- Use Ansible to configure a Linux demo host or automate the deployment prerequisites.
-- Demonstrate a rolling update and confirm the services become healthy.
+- Add Dockerfiles and Docker Compose for local development.
+- Add a Jenkins pipeline for validation, application checks, image builds, and release publishing.
+- Deploy the application to a local Kubernetes environment using Deployments, Services, and health probes.
+- Demonstrate a rolling update.
+- Add basic Prometheus/Grafana service health and document where to inspect logs and failed pipeline runs.
 
-**Deliverables**
-- Kubernetes deployment instructions and manifests.
-- A focused Terraform configuration and Ansible playbook.
-- Deployment evidence such as screenshots or recorded command output for the report.
+**Deliverable:** The finished product runs locally and can be demonstrated as a deployed service.
 
-**Done when** another person can follow the documented steps to prepare the demo environment and deploy the application without manually repeating undocumented setup.
+**Complete when:** Another person can follow the setup steps, use the product demo, and see whether its services are healthy.
 
-### Stage 7 — Add basic monitoring, documentation, and final demonstration
+### Phase 7 — Add the smallest useful IaC evidence
 
-**Work to plan and complete**
-- Add basic Prometheus metrics and a Grafana dashboard for service health and request activity.
-- Document where to inspect service logs, Jenkins failures, and failed context validation.
-- Write setup, architecture, security, pipeline, deployment, rollback, and troubleshooting documentation.
-- Prepare a short end-to-end demonstration and report mapping each stage to a syllabus unit.
+Do this after the core product workflow works.
 
-**Deliverables**
-- Basic monitoring dashboard and log/health-check instructions.
-- Project report and demo script.
-- Final acceptance checklist with evidence.
+- Choose one small, repeatable Terraform task for preparing the demo environment.
+- Choose one small Ansible playbook for configuring a Linux host or preparing deployment prerequisites.
+- Document exactly what each automates and how to run it.
+- Avoid paid cloud resources unless the mentor specifically requires them.
 
-**Done when** the complete scenario below can be demonstrated from proposal through review, release, AI retrieval, deployment, monitoring, and rollback.
+**Deliverable:** Simple, understandable Terraform and Ansible examples tied to running ContextOps.
 
-## 4. Syllabus mapping to project work
+**Complete when:** Both tools have a clear role in preparing the project demo, without expanding into a separate infrastructure project.
 
-| Syllabus unit | Planned project evidence |
-|---|---|
-| 1. DevOps Foundations & Linux Fundamentals | Linux demo setup, shell helper for setup/health checks, permissions, ports, and service connectivity documented. |
-| 2. Version Control & CI/CD Automation | Git branches and pull requests plus Jenkins validation/build/release pipeline. GitHub Actions in the earlier scope should not be the only pipeline evidence if Jenkins is expected by the course. |
-| 3. Containerization & Kubernetes Orchestration | Dockerfiles, Docker Compose, Kubernetes Deployments and Services, health checks, and rolling update. |
-| 4. Infrastructure-as-Code & Automation | A small Terraform setup and Ansible playbook supporting the demo environment/deployment. Keep these focused and repeatable. |
-| 5. DevOps Integration & Monitoring | Jenkins-to-container-to-Kubernetes delivery flow, Prometheus/Grafana health view, logs, deployment status, and rollback demonstration. |
+## 4. Development-first syllabus mapping
 
-## 5. Suggested four-week schedule
-
-This is a draft schedule; adjust it to the time available and mentor feedback.
-
-| Week | Main focus | Target outcome |
+| Syllabus area | How it supports ContextOps development | Evidence in the finished project/demo |
 |---|---|---|
-| 1 | Design, record model, GitHub connection, basic dashboard and search | Browse context and submit a proposal as a pull request. |
-| 2 | Validation, approval workflow, release publishing, MCP retrieval, Project State | Approved context is published and retrievable by an independent AI client. |
-| 3 | Docker/Compose, Jenkins pipeline, Kubernetes deployment | Local and Kubernetes demos work; CI checks and image build are visible. |
-| 4 | Terraform, Ansible, monitoring, rollback, documentation and demo | All five syllabus units have demonstrable evidence; rehearse the complete scenario. |
+| Linux, shell, permissions, networking | Develop/run services in Linux; use shell helpers; understand file access and service ports. | Document local setup and show the app services communicating correctly. |
+| Git and GitHub workflows | Use branches, commits, merges, pull requests, and conflict resolution while developing. | Context changes use Git branches and human-reviewed pull requests. |
+| Jenkins CI/CD | Use Jenkins to check and build the application as it changes. | Show validation, build, image creation, and approved-context publishing stages. |
+| Docker and Compose | Package services and use Compose for local development. | Demonstrate the app running in containers on a developer machine. |
+| Kubernetes | Learn deployment concepts after core product behavior is working. | Demonstrate pods, Deployments, Services, health probes, and a rolling update. |
+| Ansible and Terraform | Use only small supporting automation tasks after core development. | Show a focused playbook and Terraform configuration that prepare the demo setup. |
+| Integration and monitoring | Connect pipeline and deployment steps; keep security and operations visible. | Show basic service health, logs, pipeline status, and rollback. |
 
-If the schedule is too tight, prioritize the approved-context workflow, MCP retrieval, Jenkins, Docker, and Kubernetes first. Keep Terraform, Ansible, and monitoring minimal but real so every syllabus unit still has evidence.
+The original scope names GitHub Actions. For stronger alignment with this syllabus, plan Jenkins as the main course pipeline unless the mentor approves GitHub Actions instead.
 
-## 6. End-to-end demo script
+## 5. Suggested schedule
 
-1. Show a project with existing context records and a Project State handoff.
+Use this as a planning estimate and adjust to the time available.
+
+| Stage | Focus | Target result |
+|---|---|---|
+| 1 | Knowledge model, repository layout, user flow | Stable design and sample context records. |
+| 2 | Project setup, records, browsing, search | A usable context dashboard. |
+| 3 | Pull-request proposals and validation | Reviewed, checked context changes. |
+| 4 | Approved releases and MCP retrieval | Independent AI clients retrieve trusted context. |
+| 5 | Project State, history, rollback | Handoffs and recovery work. |
+| 6 | Docker, Jenkins, Kubernetes, basic monitoring | Product is packaged and demonstrable. |
+| 7 | Small Ansible/Terraform additions and report | Course evidence is complete without distracting from the product. |
+
+If the available time is short, reduce dashboard polish and infrastructure depth before cutting the proposal, approval, published-context, MCP retrieval, or rollback flow. These are the defining parts of ContextOps.
+
+## 6. End-to-end project demonstration
+
+1. Open a project and show its approved context and current Project State.
 2. Propose a PostgreSQL decision through the dashboard or an MCP client.
-3. Show the created GitHub pull request and Jenkins validation.
-4. Approve and merge the pull request; show the new published release.
-5. Ask a separate AI client to retrieve the database decision and its reasoning.
-6. Propose a conflicting database choice and show that it is flagged for human review.
-7. Show the application running in Docker Compose and Kubernetes.
-8. Show service health in Grafana and locate a pipeline/validation result.
-9. Roll back to the previous approved context release and verify MCP returns that version.
+3. Show the GitHub pull request and automated validation.
+4. Have a human approve and merge it; show the published release.
+5. Ask a separate AI client to retrieve the decision and its rationale through MCP.
+6. Submit a conflicting database proposal and show the warning for human review.
+7. Publish a Project State handoff and retrieve it from another AI session.
+8. Show the app running through Docker Compose and on Kubernetes, with Jenkins status and basic health monitoring.
+9. Restore the earlier approved release and confirm MCP now serves that version.
 
-## 7. Project completion checklist
+## 7. Product completion checklist
 
-- [ ] Seven record types can be created and viewed.
-- [ ] Search and metadata filtering work.
-- [ ] Proposals create GitHub pull requests and require human approval.
-- [ ] Automated validation blocks invalid context from being published.
-- [ ] MCP reads only the active published release and can submit proposals separately.
+- [ ] A project can connect to a GitHub context repository.
+- [ ] Seven record types can be created, viewed, searched, and filtered.
+- [ ] Proposals use Git branches and pull requests with human review.
+- [ ] Automated validation blocks invalid context from publication.
+- [ ] MCP retrieval serves only the active approved release.
 - [ ] Two independent AI sessions can retrieve the same approved decision.
-- [ ] Project State handoff can be approved and retrieved.
+- [ ] Conflicting proposals are flagged for human review.
+- [ ] Project State handoffs can be approved and retrieved.
 - [ ] Release history and rollback work without deleting Git history.
 - [ ] Docker Compose runs the project locally.
-- [ ] Jenkins pipeline demonstrates validation, build, and release steps.
-- [ ] Kubernetes deployment, service access, health probes, and rolling update are demonstrated.
-- [ ] Terraform and Ansible each have a small, documented, repeatable role.
-- [ ] Prometheus/Grafana provide basic health evidence; logs and pipeline failures can be inspected.
-- [ ] Setup, architecture, security boundaries, deployment, rollback, and demo steps are documented.
+- [ ] Jenkins shows validation/build/release steps.
+- [ ] Kubernetes deployment, health probes, and a rolling update are demonstrated.
+- [ ] A focused Terraform task and Ansible playbook support the demo setup.
+- [ ] Basic health monitoring, logs, and pipeline failures can be inspected.
+- [ ] Setup, architecture, security boundaries, and demo steps are documented.
 
+## 8. Out of scope for the first version
 
-## 9. Development-first syllabus checklist
+Keep advanced semantic conflict resolution, automatic extraction from all conversations, autonomous agent orchestration, enterprise permission systems, vector search, multi-cloud infrastructure, and elaborate observability out of the first version. They do not prove the central idea and would take time away from the shared, approved context workflow.
 
-The project is the main focus. Syllabus topics can be demonstrated either through the way ContextOps is developed, through the finished project's deployment, or both. The items below are planned evidence, not completed work.
+## 9. Planning notes
 
-| Syllabus topics | Practised while developing ContextOps | Demonstrated by the ContextOps project |
-|---|---|---|
-| Linux file navigation, users/permissions, shell scripting, IP/ports/protocols | Use a Linux environment for development; navigate files, manage access, run a setup/health-check script, and inspect service ports/connectivity. | Document the Linux setup and show the app services communicating over the expected ports. These are development practices, not product features. |
-| Git fundamentals, branching, merging, conflict resolution | Use feature branches, commits, merges, and resolve a deliberate or naturally occurring merge conflict during development. | Show the project and context repositories' history and pull-request review flow. |
-| GitHub workflows and Jenkins setup/jobs/pipeline scripting | Use pull requests for project changes and configure Jenkins as the development CI pipeline. | Show Jenkins validating context, checking/building the app, and publishing approved context. Prefer Jenkins for course evidence even though the original scope named GitHub Actions. |
-| Docker architecture, Dockerfile, images, containers, Docker Compose | Build and run the application in containers during development; understand the image and container workflow. | Show Dockerfiles and Compose running the dashboard/API/MCP services locally. |
-| Kubernetes architecture, pods, deployments, services, scaling/load balancing | Learn the cluster and deployment concepts while preparing the demo. | Deploy ContextOps to local Kubernetes; show pods, Deployments, Services, health probes, and a basic scaling or traffic-distribution demonstration if feasible. |
-| Ansible playbooks, roles, inventory; Terraform providers, resources, state; automated provisioning/configuration | Learn and write these as small project-support scripts rather than building a separate infrastructure product. | Use one focused Ansible playbook and one Terraform configuration to prepare or deploy the demo environment. Document their inventory/resources/state and what each automates. |
-| CI/CD integration with Docker, Kubernetes, Ansible, Terraform | Build the pipeline incrementally as development progresses. | Demonstrate the delivery path from Jenkins checks to image build and Kubernetes deployment, with the IaC steps documented or invoked for environment setup. |
-| Blue-green/rolling deployment, Prometheus/Grafana, logging, security | Add operational checks and secure handling of development credentials as part of the build process. | Demonstrate a rolling update (the MVP deployment strategy), basic Prometheus/Grafana service health, logs, and credential/permission boundaries. Blue-green can remain a stretch item if time is limited. |
-
-### Development priority
-
-1. Build the ContextOps knowledge and approval workflow first: records, pull requests, validation, approved release, and MCP retrieval.
-2. Use Git, Linux, Jenkins, and Docker throughout that development so these syllabus topics are naturally evidenced.
-3. Add Kubernetes deployment and basic monitoring after the core workflow works.
-4. Add the smallest useful Ansible and Terraform tasks to support the demo. Keep them small enough that infrastructure work does not take priority over the ContextOps product.
-
-At the planning stage, the checklist identifies where each syllabus topic will be learned or shown. The mentor can confirm whether this evidence is sufficient for the requested syllabus coverage before implementation starts.
-
-## 8. Keep the scope manageable
-
-Do not add multi-cloud provisioning, advanced semantic conflict resolution, autonomous agent orchestration, enterprise permissions, vector search, or automatic extraction from every conversation. These features are not needed to demonstrate ContextOps or the five syllabus units.
-
-The backend framework, Kubernetes environment, Terraform provider/resources, Linux host choice, and exact monitoring metrics are design choices to settle before implementation begins.
-
+This document is a plan, not a record of completed implementation. Confirm the backend framework, Linux environment, Kubernetes choice, Jenkins setup, Terraform provider/resources, Ansible target, and monitoring signals with the mentor before committing to those technical details.
