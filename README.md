@@ -2,7 +2,7 @@
 
 ContextOps is a shared context layer for teams using different AI assistants. It preserves important project decisions and the reasoning behind them, then makes approved context available to teammates and their assistants.
 
-## Phase 1 architecture
+## Architecture
 
 - `apps/web`: Next.js dashboard with shadcn/ui.
 - `apps/api`: NestJS REST API and MCP service.
@@ -13,7 +13,9 @@ See [the architecture](docs/architecture.md) and [the implementation plan](docs/
 
 ## Current progress
 
-Phase 1 is the architecture and project skeleton. The dashboard and API are scaffolds; the ContextOps workflow has not been implemented yet.
+Phase 1 architecture and project skeleton are complete. The first Phase 2 slice is implemented: seven sample Markdown records can be read through the NestJS API, searched/filtered in the Next.js dashboard, and opened to inspect their reasoning trail.
+
+The records are local demo fixtures. GitHub repository linking, pull-request proposals/review, publishing, and MCP retrieval are still upcoming phases.
 
 ## Start the development servers
 

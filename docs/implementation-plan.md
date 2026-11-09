@@ -42,13 +42,23 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 
 ### Phase 2 — Create and browse project context
 
-- Build project setup and GitHub repository linking.
-- Build the dashboard to list and view records.
-- Add keyword search and metadata filters.
+#### Phase 2A — Read-only context library (completed)
+
+- [x] Define a shared record shape that carries the question, outcome, rationale, constraints, alternatives, discussion summary, and source notes.
+- [x] Add seven sample Markdown records with YAML front matter.
+- [x] Add a NestJS repository adapter and read-only API for approved records.
+- [x] Build a Next.js dashboard to browse records, search reasoning, filter by type, and inspect a record's decision trail.
+
+This first slice uses `examples/demo-context/` fixtures so the cross-assistant context idea can be seen before GitHub authentication is added.
+
+#### Phase 2B — Project connection and context entry (next)
+
+- Build project setup and link a project to its GitHub context repository.
+- Replace the local fixture adapter with a GitHub-backed read adapter while keeping the same API and screen.
 - Add create/edit proposal entry points for all seven record types.
 - Let a teammate turn an important AI discussion into a context proposal, including its decision trail and selected supporting conversation notes.
 
-**Deliverable:** Users can connect a repository and explore structured project knowledge.
+**Deliverable:** Users can connect a GitHub repository, explore structured context, and prepare proposals that preserve the discussion reasoning.
 
 **Complete when:** The seven record types can be represented and browsed in the app.
 

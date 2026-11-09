@@ -69,12 +69,18 @@ contextrepo/
 ├── docs/
 │   ├── architecture.md
 │   └── implementation-plan.md
-└── context-repository/      # Demo context source, separate logically from app source
-    ├── context/
-    └── schemas/
+└── examples/
+    └── demo-context/        # Local Markdown fixtures for the first read-only slice
+        ├── decisions/
+        ├── requirements/
+        ├── constraints/
+        ├── research/
+        ├── rejected-approaches/
+        ├── open-questions/
+        └── project-state/
 ```
 
-The production context repository is a separate GitHub repository linked by a ContextOps project. The local `context-repository/` folder is only the development/demo fixture unless and until a project is explicitly linked to a remote context repository.
+The first read-only slice loads Markdown fixtures from `examples/demo-context/` through a repository adapter. The production context repository will be a separate GitHub repository linked by a ContextOps project; GitHub access and approval flows are not implemented yet.
 
 ## Trust and access boundaries
 
