@@ -1,0 +1,12 @@
+{
+  "name": "contextops",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "scripts": {
+    "dev": "corepack pnpm --parallel --filter @contextops/api --filter @contextops/web dev",
+    "dev:api": "corepack pnpm --filter @contextops/api dev",
+    "dev:web": "corepack pnpm --filter @contextops/web dev",
+    "build": "corepack pnpm --recursive build"
+  }
+}
