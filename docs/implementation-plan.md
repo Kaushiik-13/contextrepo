@@ -174,6 +174,30 @@ If the available time is short, reduce dashboard polish and infrastructure depth
 
 Keep advanced semantic conflict resolution, automatic extraction from all conversations, autonomous agent orchestration, enterprise permission systems, vector search, multi-cloud infrastructure, and elaborate observability out of the first version. They do not prove the central idea and would take time away from the shared, approved context workflow.
 
-## 9. Planning notes
+## 9. Chosen technical direction
 
-This document is a plan, not a record of completed implementation. Confirm the backend framework, Linux environment, Kubernetes choice, Jenkins setup, Terraform provider/resources, Ansible target, and monitoring signals with the mentor before committing to those technical details.
+These are planning decisions for the first version. They can be adjusted if a course requirement or mentor feedback requires it.
+
+| Area | Planned choice | Role in ContextOps |
+|---|---|---|
+| Web dashboard | Next.js | User interface for projects, knowledge records, proposals, and release history. |
+| UI components | shadcn/ui | Reusable buttons, forms, tables, dialogs, and other dashboard components. |
+| Backend | NestJS | API, GitHub integration, context validation/release operations, and MCP service. |
+| Knowledge source of truth | GitHub repository with Markdown/YAML | Stores reviewable context records and Git history. |
+| Development OS | Ubuntu through WSL on Windows | Linux environment for development and syllabus Linux practice. |
+| Local app runtime | Docker Compose | Runs the dashboard and backend services locally during development. |
+| Deployment demo | Local Kubernetes cluster | Demonstrates container orchestration after the core app works. |
+| Terraform role | Manage the demo application's Kubernetes resources in the existing local cluster | Demonstrates providers, resources, and state without requiring paid cloud infrastructure. |
+| Ansible role | Configure the Linux demo environment and deployment prerequisites | Demonstrates inventory and playbooks through a small repeatable setup task. |
+| CI/CD | Jenkins as the main course-alignment pipeline | Validates changes, builds the app image, and supports approved context publishing. |
+| Monitoring | Basic Prometheus/Grafana service health, with logs | Shows whether the demo services are running and helps inspect failures. |
+
+### Build priority
+
+1. Build the ContextOps product workflow: knowledge records, GitHub proposals and review, validation, approved releases, MCP retrieval, Project State handoffs, and rollback.
+2. Use WSL/Linux, Git, Jenkins, and Docker Compose as the development environment and delivery workflow.
+3. After the core workflow works, deploy it to Kubernetes.
+4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
+
+This document is a plan, not a record of completed implementation. Confirm with the mentor whether Jenkins is required instead of GitHub Actions and whether the proposed local Kubernetes, Terraform, and Ansible demonstrations satisfy the course expectations.
+
