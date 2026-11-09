@@ -184,8 +184,34 @@ If the schedule is too tight, prioritize the approved-context workflow, MCP retr
 - [ ] Prometheus/Grafana provide basic health evidence; logs and pipeline failures can be inspected.
 - [ ] Setup, architecture, security boundaries, deployment, rollback, and demo steps are documented.
 
+
+## 9. Development-first syllabus checklist
+
+The project is the main focus. Syllabus topics can be demonstrated either through the way ContextOps is developed, through the finished project's deployment, or both. The items below are planned evidence, not completed work.
+
+| Syllabus topics | Practised while developing ContextOps | Demonstrated by the ContextOps project |
+|---|---|---|
+| Linux file navigation, users/permissions, shell scripting, IP/ports/protocols | Use a Linux environment for development; navigate files, manage access, run a setup/health-check script, and inspect service ports/connectivity. | Document the Linux setup and show the app services communicating over the expected ports. These are development practices, not product features. |
+| Git fundamentals, branching, merging, conflict resolution | Use feature branches, commits, merges, and resolve a deliberate or naturally occurring merge conflict during development. | Show the project and context repositories' history and pull-request review flow. |
+| GitHub workflows and Jenkins setup/jobs/pipeline scripting | Use pull requests for project changes and configure Jenkins as the development CI pipeline. | Show Jenkins validating context, checking/building the app, and publishing approved context. Prefer Jenkins for course evidence even though the original scope named GitHub Actions. |
+| Docker architecture, Dockerfile, images, containers, Docker Compose | Build and run the application in containers during development; understand the image and container workflow. | Show Dockerfiles and Compose running the dashboard/API/MCP services locally. |
+| Kubernetes architecture, pods, deployments, services, scaling/load balancing | Learn the cluster and deployment concepts while preparing the demo. | Deploy ContextOps to local Kubernetes; show pods, Deployments, Services, health probes, and a basic scaling or traffic-distribution demonstration if feasible. |
+| Ansible playbooks, roles, inventory; Terraform providers, resources, state; automated provisioning/configuration | Learn and write these as small project-support scripts rather than building a separate infrastructure product. | Use one focused Ansible playbook and one Terraform configuration to prepare or deploy the demo environment. Document their inventory/resources/state and what each automates. |
+| CI/CD integration with Docker, Kubernetes, Ansible, Terraform | Build the pipeline incrementally as development progresses. | Demonstrate the delivery path from Jenkins checks to image build and Kubernetes deployment, with the IaC steps documented or invoked for environment setup. |
+| Blue-green/rolling deployment, Prometheus/Grafana, logging, security | Add operational checks and secure handling of development credentials as part of the build process. | Demonstrate a rolling update (the MVP deployment strategy), basic Prometheus/Grafana service health, logs, and credential/permission boundaries. Blue-green can remain a stretch item if time is limited. |
+
+### Development priority
+
+1. Build the ContextOps knowledge and approval workflow first: records, pull requests, validation, approved release, and MCP retrieval.
+2. Use Git, Linux, Jenkins, and Docker throughout that development so these syllabus topics are naturally evidenced.
+3. Add Kubernetes deployment and basic monitoring after the core workflow works.
+4. Add the smallest useful Ansible and Terraform tasks to support the demo. Keep them small enough that infrastructure work does not take priority over the ContextOps product.
+
+At the planning stage, the checklist identifies where each syllabus topic will be learned or shown. The mentor can confirm whether this evidence is sufficient for the requested syllabus coverage before implementation starts.
+
 ## 8. Keep the scope manageable
 
 Do not add multi-cloud provisioning, advanced semantic conflict resolution, autonomous agent orchestration, enterprise permissions, vector search, or automatic extraction from every conversation. These features are not needed to demonstrate ContextOps or the five syllabus units.
 
 The backend framework, Kubernetes environment, Terraform provider/resources, Linux host choice, and exact monitoring metrics are design choices to settle before implementation begins.
+
