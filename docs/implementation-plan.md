@@ -93,7 +93,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 - Add Dockerfiles and Docker Compose for local development.
 - Add a Jenkins pipeline for validation, application checks, image builds, and release publishing.
 - Deploy the application to a local Kubernetes environment using Deployments, Services, and health probes.
-- Demonstrate a rolling update.
+- Demonstrate scaling the Kubernetes deployment and a rolling update; show how the Service routes traffic to healthy Pods.
 - Add basic Prometheus/Grafana service health and document where to inspect logs and failed pipeline runs.
 
 **Deliverable:** The finished product runs locally and can be demonstrated as a deployed service.
@@ -104,8 +104,8 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 
 Do this after the core product workflow works.
 
-- Choose one small, repeatable Terraform task for preparing the demo environment.
-- Choose one small Ansible playbook for configuring a Linux host or preparing deployment prerequisites.
+- Use Terraform for a small, repeatable provisioning task and explicitly show its provider, resources, state, and plan/apply workflow. For a no-cloud demo, manage the ContextOps Kubernetes resources in an already-running local cluster.
+- Use an Ansible inventory and playbook to configure the Linux demo environment or its deployment prerequisites. If the course requires multi-node practice, use two local demo targets; confirm this with the mentor.
 - Document exactly what each automates and how to run it.
 - Avoid paid cloud resources unless the mentor specifically requires them.
 
@@ -125,9 +125,9 @@ Do this after the core product workflow works.
 | Ansible and Terraform | Use only small supporting automation tasks after core development. | Show a focused playbook and Terraform configuration that prepare the demo setup. |
 | Integration and monitoring | Connect pipeline and deployment steps; keep security and operations visible. | Show basic service health, logs, pipeline status, and rollback. |
 
-The original scope names GitHub Actions. For stronger alignment with this syllabus, plan Jenkins as the main course pipeline unless the mentor approves GitHub Actions instead.
+The original scope names GitHub Actions. For stronger alignment with this syllabus, plan Jenkins as the main course pipeline unless the mentor approves GitHub Actions instead. Configure an automated pull-request trigger and show a failed check blocking publication.
 
-## 5. Suggested schedule
+## 4.1. Syllabus coverage target and evidence`r`n`r`nFor a rough estimate, group the practical syllabus into 18 topic groups (four for Unit 1, three for Unit 2, four for Unit 3, three for Unit 4, and four for Unit 5). On this counting method, 75% means at least 14 of 18 groups. The plan should aim to show evidence for 15 of 18 groups (about 83%) to leave a small buffer. This is a planning estimate; the mentor may group or score individual topics differently.`r`n`r`n- [ ] Linux evidence: navigate the project files, demonstrate permissions, run a small shell automation script, and inspect IP/ports/service connectivity.`r`n- [ ] Git evidence: use a branch and pull request, merge changes, and demonstrate resolving a conflict.`r`n- [ ] Jenkins evidence: automatically trigger a pipeline on a pull request; show validation/build stages and a failed check preventing publication.`r`n- [ ] Docker evidence: explain the Dockerfile/image/container path and start the multi-service app with Compose.`r`n- [ ] Kubernetes evidence: show Pods, Deployments, and Services; scale replicas and show traffic reaching healthy Pods; demonstrate a rolling update.`r`n- [ ] Ansible evidence: show inventory and a playbook configuring the Linux demo target; use two local targets if multi-node is required by the mentor.`r`n- [ ] Terraform evidence: show provider, resources, state, and plan/apply for ContextOps resources in the existing local Kubernetes cluster.`r`n- [ ] Integration evidence: show Jenkins, Docker, Kubernetes, the IaC steps, rolling deployment, basic Prometheus/Grafana health, logs, and security/credential handling as one demo story.`r`n`r`nThese are small course demonstrations attached to ContextOps. Complete the product workflow first; do not build cloud infrastructure or a separate DevOps platform just to collect syllabus evidence.`r`n`r`n## 5. Suggested schedule
 
 Use this as a planning estimate and adjust to the time available.
 
@@ -204,5 +204,6 @@ These are planning decisions for the first version. They can be adjusted if a co
 4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
 
 This document is a plan, not a record of completed implementation. Confirm with the mentor whether Jenkins is required instead of GitHub Actions and whether the proposed local Kubernetes, Terraform, and Ansible demonstrations satisfy the course expectations.
+
 
 
