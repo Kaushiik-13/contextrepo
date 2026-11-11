@@ -12,10 +12,12 @@ export function SetupShell({
   activeStep,
   children,
   showProgress = true,
+  contentWidth = "regular",
 }: {
   activeStep: 1 | 2 | 3;
   children: ReactNode;
   showProgress?: boolean;
+  contentWidth?: "regular" | "compact";
 }) {
   return (
     <main className="min-h-screen bg-[#f5f5f4] px-4 py-8 text-stone-950 sm:px-6 sm:py-12">
@@ -83,7 +85,11 @@ export function SetupShell({
           </nav>
         )}
 
-        <div className="mx-auto mt-8 w-full max-w-2xl sm:mt-10">{children}</div>
+        <div
+          className={`mx-auto mt-8 w-full ${contentWidth === "compact" ? "max-w-lg" : "max-w-2xl"} sm:mt-10`}
+        >
+          {children}
+        </div>
         <footer className="mt-10 text-center text-xs text-stone-500">
           ContextOps keeps approved project context in your GitHub repository.
         </footer>

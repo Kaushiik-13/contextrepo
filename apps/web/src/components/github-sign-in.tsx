@@ -52,7 +52,7 @@ export function GithubSignIn({ mode }: { mode: "login" | "signup" }) {
   }, []);
 
   return (
-    <SetupShell activeStep={1} showProgress={isSignup}>
+    <SetupShell activeStep={1} showProgress={isSignup} contentWidth="compact">
       <section className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-[0_16px_50px_-36px_rgba(28,25,23,0.35)]">
         <div className="border-b border-stone-100 px-6 py-7 sm:px-9 sm:py-9">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full bg-violet-50 px-3 py-1.5 text-xs font-medium text-violet-800">
