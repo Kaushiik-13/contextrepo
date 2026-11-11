@@ -4,6 +4,7 @@ import Link from "next/link";
 
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { ContextRecordTable } from "@/components/context-record-table";
+import { LoadingScreen } from "@/components/loading-screen";
 import { SectionCards } from "@/components/section-cards";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { Badge } from "@/components/ui/badge";
@@ -96,11 +97,7 @@ function FilterLink({
 }
 
 function LoadingShell() {
-  return (
-    <main className="min-h-screen px-6 py-12 text-center text-sm text-muted-foreground">
-      Loading shared context…
-    </main>
-  );
+  return <LoadingScreen variant="workspace" />;
 }
 
 export default function Home({ searchParams }: { searchParams: SearchParams }) {

@@ -1,9 +1,10 @@
 import { Suspense } from "react";
 import { AuthEntry } from "@/components/auth-entry";
+import { LoadingScreen } from "@/components/loading-screen";
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-stone-100" />}>
+    <Suspense fallback={<LoadingScreen variant="auth" />}>
       <AuthEntry mode="signup" />
     </Suspense>
   );

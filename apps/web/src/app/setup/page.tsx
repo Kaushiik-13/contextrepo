@@ -1,10 +1,11 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getWorkspaceState } from "@/lib/server-workspace";
+import { LoadingScreen } from "@/components/loading-screen";
 
 export default function SetupPage() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-stone-100" />}>
+    <Suspense fallback={<LoadingScreen variant="auth" />}>
       <SetupRedirector />
     </Suspense>
   );

@@ -1,17 +1,11 @@
 import { Suspense } from "react";
 import { Activity } from "lucide-react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { SectionPage } from "@/components/workspace-shell";
 
 export default function ActivityPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className="min-h-screen bg-stone-50"
-          aria-label="Loading activity"
-        />
-      }
-    >
+    <Suspense fallback={<LoadingScreen variant="workspace" />}>
       <SectionPage
         activePage="activity"
         eyebrow="PROJECT HISTORY"

@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
+import { LoadingScreen } from "@/components/loading-screen";
 import { SectionPage } from "@/components/workspace-shell";
 import { buttonVariants } from "@/components/ui/button";
 import { requireWorkspace } from "@/lib/server-workspace";
@@ -49,14 +50,7 @@ function dateLabel(value: string | null | undefined) {
 
 export default function SettingsPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className="min-h-screen bg-stone-50"
-          aria-label="Loading settings"
-        />
-      }
-    >
+    <Suspense fallback={<LoadingScreen variant="workspace" />}>
       <SettingsContent />
     </Suspense>
   );

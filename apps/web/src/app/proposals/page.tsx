@@ -1,17 +1,11 @@
 import { Suspense } from "react";
 import { GitBranch } from "lucide-react";
+import { LoadingScreen } from "@/components/loading-screen";
 import { SectionPage } from "@/components/workspace-shell";
 
 export default function ProposalsPage() {
   return (
-    <Suspense
-      fallback={
-        <main
-          className="min-h-screen bg-stone-50"
-          aria-label="Loading proposals"
-        />
-      }
-    >
+    <Suspense fallback={<LoadingScreen variant="workspace" />}>
       <SectionPage
         activePage="proposals"
         eyebrow="TEAM REVIEW"
