@@ -8,7 +8,7 @@
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
   scrollbar-width: thin;
-  scrollbar-color: #c4b5fd transparent;
+  scrollbar-color: #d6d3d1 transparent;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -23,12 +23,12 @@
 .context-detail-scroll::-webkit-scrollbar-thumb {
   border: 2px solid transparent;
   border-radius: 999px;
-  background: #c4b5fd;
+  background: #d6d3d1;
   background-clip: padding-box;
 }
 
 .context-detail-scroll::-webkit-scrollbar-thumb:hover {
-  background: #8b5cf6;
+  background: #a8a29e;
   background-clip: padding-box;
 }
 

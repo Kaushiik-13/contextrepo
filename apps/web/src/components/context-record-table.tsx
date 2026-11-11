@@ -183,7 +183,7 @@ export function ContextRecordTable({ records }: { records: ContextRecord[] }) {
         }}
       >
         {selected && (
-          <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
+          <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-2xl">
             <SheetHeader className="shrink-0 gap-2 border-b border-stone-200 bg-gradient-to-r from-white to-stone-50 px-5 pb-5 pt-6">
               <div className="flex items-center justify-between gap-3 pr-8">
                 <TypeBadge type={selected.type} />
