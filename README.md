@@ -36,3 +36,7 @@ corepack pnpm dev:web
 ```
 
 The dashboard uses port 3000; the API uses port 4000.
+
+## Supabase database connection
+
+The API reads its local environment from `apps/api/.env`. Copy `apps/api/.env.example` to `apps/api/.env`, then paste the Supabase PostgreSQL connection string after `DATABASE_URL=`. Keep `.env` private; it is ignored by Git. The API loads this setting, but database access will be wired into the application in the database implementation step.
