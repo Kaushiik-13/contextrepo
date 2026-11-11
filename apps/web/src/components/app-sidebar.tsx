@@ -49,10 +49,10 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
-              <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                 <ContextOpsMark className="size-5" />
               </span>
-              <span className="grid flex-1 text-left leading-tight">
+              <span className="group-data-[collapsible=icon]:hidden grid flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-semibold">
                   ContextOps
                 </span>
@@ -77,7 +77,7 @@ export function AppSidebar({
               <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
                 {user.login.slice(0, 1).toUpperCase()}
               </span>
-              <span className="grid min-w-0 flex-1 text-left leading-tight">
+              <span className="group-data-[collapsible=icon]:hidden grid min-w-0 flex-1 text-left leading-tight">
                 <span className="truncate text-xs font-medium">
                   {user.login}
                 </span>
