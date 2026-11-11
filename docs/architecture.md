@@ -14,7 +14,7 @@ The first use case is Person A discussing PostgreSQL versus MySQL with ChatGPT, 
 | Backend | NestJS service for the product API, GitHub integration, validation, release operations, and MCP server. |
 | Approved context source of truth | A `context/` folder in the project's existing GitHub code repository, using Markdown records and YAML front matter. A separate context repository is optional, not required for the MVP. |
 | Application storage | Supabase PostgreSQL stores GitHub sign-in sessions, the selected repository, and later saved proposal drafts. It does not replace GitHub as the source of truth for approved context. |
-| Approval | GitHub pull requests and human review control acceptance. The application and MCP proposal tool cannot approve or merge. |
+| Approval | People review and approve proposals in ContextOps. MCP can read approved context and submit drafts, but cannot approve or publish. After approval, ContextOps publishes the record to GitHub. The exact commit/pull-request method remains to be finalized before that phase. |
 | Published context | Immutable Git tag or commit-pinned snapshot, selected by one active release reference per project. |
 | Search | Begin with keyword and metadata search over approved GitHub-backed context. PostgreSQL also stores app configuration and drafts; drafts are excluded from approved-context retrieval. |
 | Development and local run | Ubuntu through WSL on Windows; Docker Compose for the dashboard and backend. |
@@ -29,11 +29,12 @@ flowchart LR
   W -->|REST API| API[NestJS API and MCP service]
   API -->|save session and selected project| DB[(Supabase PostgreSQL)]
   API -->|read or initialize context folder| GH
-  A[Person A and AI assistant] -->|write proposal draft| W
+  A[Person A and AI assistant] -->|MCP: submit proposal draft| API
   API -->|save draft| DB
-  API -->|Phase 3: branch and pull request| GH
-  B[Person B and reviewer] -->|review and approve| GH
-  GH -->|approved merge| CI[Jenkins validation and publish pipeline]
+  B[Person B and reviewer] -->|review, edit, approve or reject| W
+  W -->|approval triggers publication| API
+  API -->|publish approved Markdown| GH
+  GH -->|approved context change| CI[Jenkins validation and release pipeline]
   CI -->|validated immutable release| GH
   C[Person B and another AI assistant] -->|MCP query| API
   API -->|read active approved release only| GH
@@ -57,13 +58,12 @@ The record types are Decision, Requirement, Constraint, Research, Rejected Appro
 ## Core information flow
 
 1. A teammate discusses a project question with an AI assistant.
-2. The teammate or assistant saves a proposal draft with the useful reasoning trail; in Phase 2B, the draft is stored in PostgreSQL.
-3. In Phase 3, ContextOps opens a branch and pull request in the project's existing GitHub code repository, placing the proposed approved record under `context/`.
-4. Validation checks the record structure and required metadata.
-5. A human reviewer approves and merges the pull request in GitHub.
-6. Jenkins publishes a validated, immutable context release. A failed publish leaves the previous release active.
-7. Another teammate's AI asks the NestJS MCP service for relevant context.
-8. The MCP service reads only the active approved release and returns the decision with its rationale and source references.
+2. The teammate or assistant submits a proposal with the useful reasoning trail. In Phase 2B.3, the dashboard saves it as a draft in PostgreSQL; later an AI assistant can submit the same draft through MCP.
+3. A person reviews, edits, approves, or rejects the draft in ContextOps. Neither the AI assistant nor an MCP tool can approve it.
+4. After approval, ContextOps validates and publishes the Markdown record to the project's existing GitHub code repository under `context/`. The exact GitHub write method is to be chosen before the publishing phase.
+5. Jenkins validates and publishes an immutable context release. A failed publish leaves the previous release active.
+6. Another teammate's AI asks the NestJS MCP service for relevant context.
+7. The MCP service reads only the active approved release and returns the decision with its rationale and source references. Drafts are never included.
 
 ## Repository layout
 
@@ -92,13 +92,14 @@ The Phase 2B onboarding and live context reading slices are implemented: a user 
 
 ## Trust and access boundaries
 
-- MCP retrieval returns published context only; drafts stay in pull requests.
-- MCP proposals create a reviewable pull request and cannot approve or merge it.
-- Only validated merged content can be published.
+- MCP retrieval returns published context only; drafts stay in PostgreSQL.
+- MCP clients can submit drafts but cannot approve proposals or publish records.
+- A person approves or rejects each proposal in ContextOps before publication to GitHub.
+- Only approved and validated content can be published.
 - Publishing a new release does not replace the active release until publishing succeeds.
 - Rollback changes the active release reference and keeps the original Git history.
 - Secrets are supplied through local environment configuration or a secret manager, never committed.
 
 ## Still to design
 
-MCP tool signatures, the GitHub-backed context reader, proposal API and screens, exact CI pipeline stages, and production hosting will be designed in later phases against this architecture and the first end-to-end use case. The current GitHub onboarding flow and shared UI rules are documented in `docs/github-account-and-repository-connection.md` and `docs/ui-guidelines.md`.
+MCP tool signatures, the GitHub-backed context reader, proposal API and screens, exact CI pipeline stages, GitHub publication method (direct commit or pull request), and production hosting will be designed in later phases against this architecture and the first end-to-end use case. The current GitHub onboarding flow and shared UI rules are documented in `docs/github-account-and-repository-connection.md` and `docs/ui-guidelines.md`.

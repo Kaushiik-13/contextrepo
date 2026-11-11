@@ -15,7 +15,7 @@ See [the architecture](docs/architecture.md) and [the implementation plan](docs/
 
 Phase 1 architecture and project skeleton are complete. Phase 2A established the record model and dashboard using sample Markdown. Phase 2B.2 replaces the sample data with approved records read from the signed-in user's connected GitHub repository, while preserving search, filters, and record details.
 
-GitHub sign-in, one-repository selection, persistent project settings, and context-folder setup are implemented. The library reads only approved Markdown records from the connected repository's `context/` folder; drafts are ignored. See [the context record format](docs/context-record-format.md) to add a record. Editable proposals are the next slice; pull-request review and MCP retrieval are later phases.
+GitHub sign-in, one-repository selection, persistent project settings, and context-folder setup are implemented. The library reads only approved Markdown records from the connected repository's `context/` folder; drafts are ignored. See [the context record format](docs/context-record-format.md) to add a record. Next is editable proposal drafts; later, AI clients will submit drafts through MCP for human review and approval in ContextOps before approved records are published to GitHub.
 
 ## Start the development servers
 

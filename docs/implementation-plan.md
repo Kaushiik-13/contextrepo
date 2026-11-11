@@ -15,7 +15,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 - Store and browse seven record types: Decision, Requirement, Constraint, Research, Rejected Approach, Open Question, and Project State.
 - Preserve each context item's reasoning trail: the question, final outcome, rationale, constraints, alternatives/tradeoffs, and selected discussion notes or source references.
 - Search and filter records.
-- Propose changes through pull requests, validate them, and require human review.
+- Propose changes through ContextOps, validate them, and require human review in ContextOps before publishing to GitHub.
 - Publish approved context as a versioned release.
 - Let independent AI clients retrieve only the active approved release through MCP.
 - Support project progress handoffs, release history, and rollback.
@@ -55,8 +55,8 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 
 - **2B.1 GitHub onboarding and persistence (implemented):** Show one GitHub sign-in/sign-up screen; let the user authorize ContextOps and install its GitHub App for a selected repository set; show one repository-selection screen; check for `context/`; if missing, offer to create `context/README.md` on the default branch. Store the GitHub identity/session, installation, and one selected project in Supabase PostgreSQL. Sessions expire after seven days; logout preserves the project connection. Verify installation ownership, keep the OAuth token encrypted only for the short setup callback, store session hashes (not raw session tokens), and provide GitHub access status/reconnect actions. Keep the private key and database URL in the ignored API `.env` file. The schema update is migration `002_persistent_github_connection.sql`.
 - **2B.2 Read approved context (implemented):** The authenticated library reads Markdown files from the connected repository's `context/` folder on its default branch. It displays only records with `status: approved`, skips drafts and `README.md`, validates record fields, and reports invalid files by path. Search, type filters, record details, and summary cards use GitHub data. Missing folders, empty folders, unreadable files, and API errors have explicit UI states. There is no silent fixture fallback.
-- **2B.3 Save proposal drafts:** Add create, save, and edit for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Save drafts in PostgreSQL and keep them out of the approved library and retrieval API.
-- Defer pull-request creation for proposals, automated validation, human approval, and publishing to Phase 3. The folder initializer is setup scaffolding only; it does not publish a decision.
+- **2B.3 Save proposal drafts:** Add create, save, and edit for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Save drafts in PostgreSQL and keep them out of the approved library and retrieval API. These same proposal actions will later be available to AI clients through MCP.
+- Defer MCP tools, the ContextOps review/approval screen, automated validation, and publishing to later slices. The folder initializer is setup scaffolding only; it does not publish a decision.
 
 **Current deliverable:** The single demo project connects to GitHub and reads approved context from its existing code repository. Saving proposal drafts is the next 2B.3 slice.
 
@@ -64,28 +64,29 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 
 ### Phase 3 — Add review and trust controls
 
-- Make proposals create a branch and pull request in GitHub.
-- Validate required fields, metadata, file layout, and references automatically.
-- Show validation status and pull-request status in the dashboard.
-- Keep approval and merge authority in GitHub; the app and MCP proposal tool cannot approve or merge changes.
+- Let an AI submit a proposal through MCP as a draft; MCP must not approve or publish it.
+- Let a person review, edit, approve, or reject the proposal in ContextOps.
+- Validate required fields, metadata, file layout, and references before approval and publication.
+- After approval in ContextOps, publish the approved Markdown record to the connected GitHub repository and retain Git history.
+- Show proposal review and publication status in the dashboard. Decide the exact GitHub publishing method (direct commit or pull request) before implementing this phase.
 - Flag possible conflicting decisions for human review.
 
-**Deliverable:** A safe proposal workflow backed by GitHub pull requests and automated validation.
+**Deliverable:** A safe proposal workflow where MCP can submit drafts, people approve in ContextOps, and only approved records are published to GitHub.
 
 **Complete when:** Invalid or unreviewed proposals cannot silently become active context.
 
 ### Phase 4 — Publish approved context and build MCP retrieval
 
-- Publish a merged, valid change as an immutable Git tag or commit-pinned release.
+- Publish an approved, valid change as an immutable Git tag or commit-pinned release.
 - Track one active published release per project.
 - If publishing fails, continue serving the previous successful release.
 - Implement MCP retrieval from the active published release only.
 - Include version and source references in retrieval results.
-- Implement MCP proposal submission separately from read access.
+- Expose MCP proposal submission for drafts, but never expose approval or publishing actions to AI clients.
 
 **Deliverable:** An independent AI assistant can retrieve the same approved project facts as another assistant.
 
-**Complete when:** Two separate AI sessions return the same approved decision, while draft pull-request content remains hidden from normal retrieval.
+**Complete when:** Two separate AI sessions return the same approved decision, while drafts remain hidden from normal retrieval and AI clients cannot approve or publish proposals.
 
 ### Phase 5 — Add project progress and recovery
 
@@ -141,7 +142,7 @@ Do this after the single-project product and its DevOps demonstration work end t
 | Syllabus area | How it supports ContextOps development | Evidence in the finished project/demo |
 |---|---|---|
 | Linux, shell, permissions, networking | Develop/run services in Linux; use shell helpers; understand file access and service ports. | Document local setup and show the app services communicating correctly. |
-| Git and GitHub workflows | Use branches, commits, merges, pull requests, and conflict resolution while developing. | Context changes use Git branches and human-reviewed pull requests. |
+| Git and GitHub workflows | Use branches, commits, merges, pull requests, and conflict resolution while developing. | Show source-code pull requests; approved context is versioned in GitHub after ContextOps review. |
 | Jenkins CI/CD | Use Jenkins to check and build the application as it changes. | Show validation, build, image creation, and approved-context publishing stages. |
 | Docker and Compose | Package services and use Compose for local development. | Demonstrate the app running in containers on a developer machine. |
 | Kubernetes | Learn deployment concepts after core product behavior is working. | Demonstrate pods, Deployments, Services, health probes, and a rolling update. |
@@ -185,9 +186,9 @@ If the available time is short, reduce dashboard polish and infrastructure depth
 ## 6. End-to-end project demonstration
 
 1. Person A explores PostgreSQL versus MySQL with ChatGPT through several rounds of discussion.
-2. Person A submits a context proposal capturing the question, chosen database, reasons, constraints, alternatives, and relevant discussion notes or references.
-3. Show the GitHub pull request and automated validation.
-4. Person B reviews and approves it; ContextOps publishes the approved context.
+2. Person A asks the AI to submit a context proposal through MCP, capturing the question, proposed choice, reasons, constraints, alternatives, and relevant discussion notes or references.
+3. The proposal appears as a draft in ContextOps. Person B reviews or edits it and approves it in ContextOps.
+4. ContextOps publishes the approved record to the connected GitHub repository and records the publication result.
 5. Person B opens Claude Code and asks how the project should use a database. Claude retrieves the approved decision and rationale through MCP.
 6. If someone proposes a conflicting choice, ContextOps flags it for team review.
 7. Repeat the cross-person, cross-assistant flow for another project topic or a Project State handoff.
@@ -198,7 +199,7 @@ If the available time is short, reduce dashboard polish and infrastructure depth
 
 - [ ] A project can connect to a GitHub context repository.
 - [ ] Seven record types can be created, viewed, searched, and filtered.
-- [ ] Proposals use Git branches and pull requests with human review.
+- [ ] People review and approve proposals in ContextOps; approved records are published to GitHub with version history.
 - [ ] Automated validation blocks invalid context from publication.
 - [ ] MCP retrieval serves only the active approved release.
 - [ ] Two independent AI sessions can retrieve the same approved decision.
@@ -237,7 +238,7 @@ These are planning decisions for the first version. They can be adjusted if a co
 
 ### Build priority
 
-1. Build the ContextOps product workflow: knowledge records, GitHub proposals and review, validation, approved releases, MCP retrieval, Project State handoffs, and rollback.
+1. Build the ContextOps product workflow: knowledge records, ContextOps proposals and review, GitHub publishing, validation, approved releases, MCP retrieval, Project State handoffs, and rollback.
 2. Use WSL/Linux, Git, Jenkins, and Docker Compose as the development environment and delivery workflow.
 3. After the core workflow works, deploy it to Kubernetes.
 4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
