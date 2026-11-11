@@ -7,6 +7,7 @@ import {
   BookOpenTextIcon,
   GitBranchIcon,
   Layers3Icon,
+  PlusIcon,
   Settings2Icon,
 } from "lucide-react"
 
@@ -48,6 +49,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <span className="truncate text-sm font-semibold">ContextOps</span>
                 <span className="truncate text-xs text-sidebar-foreground/60">Team workspace</span>
               </span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              size="lg"
+              tooltip="Propose context"
+              render={<Link href="/proposals" />}
+              className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/85 active:text-primary-foreground"
+            >
+              <PlusIcon aria-hidden="true" />
+              <span className="font-medium">Propose context</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
