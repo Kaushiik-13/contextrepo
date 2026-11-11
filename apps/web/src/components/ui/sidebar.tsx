@@ -255,25 +255,27 @@ function SidebarTrigger({
   className,
   onClick,
   ...props
-}: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+}: React.ComponentProps<"button">) {
+  const { state, toggleSidebar } = useSidebar()
 
   return (
-    <Button
+    <button
+      type="button"
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
-      variant="ghost"
-      size="icon-sm"
-      className={cn(className)}
+      aria-label="Toggle sidebar"
+      aria-expanded={state === "expanded"}
+      title={state === "expanded" ? "Collapse sidebar" : "Expand sidebar"}
+      className={cn("inline-flex size-8 shrink-0 items-center justify-center rounded-md text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", className)}
       onClick={(event) => {
         onClick?.(event)
-        toggleSidebar()
+        if (!event.defaultPrevented) toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeftIcon />
+      <PanelLeftIcon className="size-4" aria-hidden="true" />
       <span className="sr-only">Toggle Sidebar</span>
-    </Button>
+    </button>
   )
 }
 
