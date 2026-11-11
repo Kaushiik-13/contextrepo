@@ -51,29 +51,29 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 
 This first slice uses `examples/demo-context/` fixtures so the cross-assistant context idea can be seen before GitHub authentication is added.
 
-#### Phase 2B — Project connection and context entry (in progress)
+#### Phase 2B — Project connection and context entry (implemented; local verification ongoing)
 
 - **2B.1 GitHub onboarding and persistence (implemented):** Show one GitHub sign-in/sign-up screen; let the user authorize ContextOps and install its GitHub App for a selected repository set; show one repository-selection screen; check for `context/`; if missing, offer to create `context/README.md` on the default branch. Store the GitHub identity/session, installation, and one selected project in Supabase PostgreSQL. Sessions expire after seven days; logout preserves the project connection. Verify installation ownership, keep the OAuth token encrypted only for the short setup callback, store session hashes (not raw session tokens), and provide GitHub access status/reconnect actions. Keep the private key and database URL in the ignored API `.env` file. The schema update is migration `002_persistent_github_connection.sql`.
 - **2B.2 Read approved context (implemented):** The authenticated library reads Markdown files from the connected repository's `context/` folder on its default branch. It displays only records with `status: approved`, skips drafts and `README.md`, validates record fields, and reports invalid files by path. Search, type filters, record details, and summary cards use GitHub data. Missing folders, empty folders, unreadable files, and API errors have explicit UI states. There is no silent fixture fallback.
-- **2B.3 Save proposal drafts (UI/API implemented; database setup pending):** Create and edit drafts for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Drafts are user- and project-scoped in PostgreSQL and are kept out of the approved library. The user must apply migration `003_context_proposal_drafts.sql` in Supabase before saving works. These same proposal actions will later be available to AI clients through MCP.
-- Defer MCP tools, the ContextOps review/approval screen, automated validation, and publishing to later slices. The folder initializer is setup scaffolding only; it does not publish a decision.
+- **2B.3 Save proposal drafts (implemented):** Create and edit drafts for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Drafts are scoped to the signed-in user and connected project in PostgreSQL, and stay out of the approved library. Migration `003_context_proposal_drafts.sql` must be applied in Supabase.
 
-**Current deliverable:** The single demo project connects to GitHub, reads approved context from its existing code repository, and has a proposal form plus draft list. Apply the proposal migration and manually verify create/edit before marking 2B.3 complete.
+**Current deliverable:** The single demo project connects to GitHub, reads approved context from its existing code repository, and saves persisted proposals. Migration `003_context_proposal_drafts.sql` has been applied by the user; complete manual create/edit and approval checks as part of Phase 3.
 
 **Complete when:** The user can sign in, connect one repo, initialize `context/` when needed, browse and search its approved context, create/edit persisted drafts, and confirm drafts do not appear in the approved library. Organization onboarding, multiple teams, member invitations, and role-based project access are explicitly deferred to Phase 8.
 
-### Phase 3 — Add review and trust controls
+### Phase 3 — Add review and trust controls (implemented; Supabase migration and manual checks pending)
 
 - Let an AI submit a proposal through MCP as a draft; MCP must not approve or publish it.
-- Let a person review, edit, approve, or reject the proposal in ContextOps.
-- Validate required fields, metadata, file layout, and references before approval and publication.
-- After approval in ContextOps, publish the approved Markdown record to the connected GitHub repository and retain Git history.
-- Show proposal review and publication status in the dashboard. Decide the exact GitHub publishing method (direct commit or pull request) before implementing this phase.
-- Flag possible conflicting decisions for human review.
+- Let a person review or edit drafts, approve them in ContextOps, or reject them with an optional review note.
+- Require title, context type, question, outcome, and rationale before approval.
+- After approval in ContextOps, write a Markdown record with YAML front matter under `context/<type>/` on the connected repository's default branch. This MVP uses a GitHub Contents API commit; each approval becomes a Git commit and the app records its path and commit SHA.
+- Show draft, approved, and rejected items in the Proposals screen. MCP-created records appear in the same draft queue.
+- Warn reviewers when a draft appears to have the same title/question as an approved record but a different outcome. The reviewer makes the decision.
+- Provide a revocable, per-user MCP bearer key; store only its SHA-256 hash. The `submit_context_proposal` MCP tool creates drafts only. It cannot approve, reject, or publish.
 
 **Deliverable:** A safe proposal workflow where MCP can submit drafts, people approve in ContextOps, and only approved records are published to GitHub.
 
-**Complete when:** Invalid or unreviewed proposals cannot silently become active context.
+**Complete when:** After applying migration `004_proposal_review_mcp.sql`, a human can approve a valid proposal and see it in GitHub and the Context library; rejected and draft records remain out of the approved library; an MCP client can submit a draft using a revocable key.
 
 ### Phase 4 — Publish approved context and build MCP retrieval
 
@@ -82,7 +82,7 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 - If publishing fails, continue serving the previous successful release.
 - Implement MCP retrieval from the active published release only.
 - Include version and source references in retrieval results.
-- Expose MCP proposal submission for drafts, but never expose approval or publishing actions to AI clients.
+- Keep MCP proposal submission as draft-only; never expose approval or publishing actions to AI clients.
 
 **Deliverable:** An independent AI assistant can retrieve the same approved project facts as another assistant.
 

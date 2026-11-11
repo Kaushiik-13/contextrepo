@@ -27,7 +27,7 @@ type Draft = {
   projectId: string;
   title: string;
   type: ContextType;
-  status: "draft";
+  status: "draft" | "approved" | "rejected";
   question: string;
   summary: string;
   rationale: string;
@@ -39,6 +39,8 @@ type Draft = {
   owner: string;
   createdAt: string;
   updatedAt: string;
+  publishedPath?: string | null;
+  publishedCommitSha?: string | null;
 };
 
 type DraftForm = Omit<
@@ -120,10 +122,12 @@ export function ProposalDrafts() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [reviewBusy, setReviewBusy] = useState(false);
+  const [conflicts, setConflicts] = useState<Array<{path:string;title:string;summary:string}>>([]);
 
   useEffect(() => {
     let active = true;
-    fetch(`${API_URL}/proposals`, {
+    fetch(`${API_URL}/proposals?status=all`, {
       credentials: "include",
       cache: "no-store",
     })
@@ -160,6 +164,7 @@ export function ProposalDrafts() {
     setForm(emptyForm());
     setError("");
     setNotice("");
+    setConflicts([]);
   }
 
   function editDraft(draft: Draft) {
@@ -167,6 +172,8 @@ export function ProposalDrafts() {
     setForm(formFromDraft(draft));
     setError("");
     setNotice("");
+    setConflicts([]);
+    if (draft.status === "draft") fetch(`${API_URL}/proposals/${draft.id}/conflicts`, { credentials:"include",cache:"no-store" }).then(r=>r.ok?r.json():null).then(result=>setConflicts(result?.matches??[])).catch(()=>setConflicts([]));
   }
 
   function updateField<K extends keyof DraftForm>(key: K, value: DraftForm[K]) {
@@ -212,7 +219,7 @@ export function ProposalDrafts() {
       setNotice(isEditing ? "Changes saved." : "Draft saved.");
 
       try {
-        const listResponse = await fetch(`${API_URL}/proposals`, {
+        const listResponse = await fetch(`${API_URL}/proposals?status=all`, {
           credentials: "include",
           cache: "no-store",
         });
@@ -244,20 +251,35 @@ export function ProposalDrafts() {
     }
   }
 
+  async function reviewDraft(decision: "approve" | "reject") {
+    if (!draftId) return;
+    setReviewBusy(true); setError(""); setNotice("");
+    try {
+      const response = await fetch(`${API_URL}/proposals/${draftId}/${decision}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      if (response.status === 401) { router.replace("/login"); return; }
+      if (!response.ok) throw new Error(await readError(response));
+      setForm(null); setDraftId(null);
+      setNotice(decision === "approve" ? "Approved and published to GitHub." : "Proposal rejected.");
+      const refreshed = await fetch(`${API_URL}/proposals?status=all`, { credentials: "include", cache: "no-store" });
+      if (refreshed.ok) { const result = await refreshed.json() as { items: Draft[] }; setDrafts(result.items ?? []); }
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Could not update this proposal."); }
+    finally { setReviewBusy(false); }
+  }
+
   return (
     <div>
       <div className="flex flex-col justify-between gap-3 border-b border-stone-100 pb-5 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold text-stone-950">
-              Your proposal drafts
+              Proposals
             </h2>
             <Badge variant="secondary" className="font-normal">
-              {drafts.length}
+              {drafts.filter((item) => item.status === "draft").length} drafts
             </Badge>
           </div>
           <p className="mt-1 text-xs text-stone-500">
-            Drafts stay separate from approved GitHub context.
+            Review drafts here. Only approved proposals are published to GitHub.
           </p>
         </div>
         <Button
@@ -287,11 +309,12 @@ export function ProposalDrafts() {
           <p>{error}</p>
         </div>
       )}
+      {conflicts.length > 0 && <div role="status" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-950"><p className="font-medium">This may conflict with approved context. Please review before approval.</p><ul className="mt-2 list-disc pl-5 text-xs">{conflicts.map((item)=><li key={item.path}><strong>{item.title}</strong>: {item.summary}</li>)}</ul></div>}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.8fr)]">
         <aside aria-label="Saved drafts" className="min-w-0">
-          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
-            Saved drafts
+            <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
+            Proposals
           </h3>
           {loading ? (
             <div className="space-y-2" aria-label="Loading drafts">
@@ -317,7 +340,7 @@ export function ProposalDrafts() {
                 <li key={draft.id}>
                   <button
                     type="button"
-                    onClick={() => editDraft(draft)}
+                    onClick={() => draft.status === "draft" ? editDraft(draft) : (setConflicts([]),setDraftId(draft.id), setForm(formFromDraft(draft)))}
                     aria-current={draftId === draft.id ? "true" : undefined}
                     className={`w-full rounded-lg px-3 py-3 text-left transition-colors ${draftId === draft.id ? "bg-violet-50 text-violet-950" : "text-stone-800 hover:bg-stone-50"}`}
                   >
@@ -331,7 +354,7 @@ export function ProposalDrafts() {
                     </span>
                     <span className="mt-1 flex items-center gap-1.5 text-xs text-stone-500">
                       <GitBranch className="size-3" aria-hidden="true" />
-                      {TYPE_LABELS[draft.type]} · Draft
+                      {TYPE_LABELS[draft.type]} · {draft.status === "approved" ? "Approved" : draft.status === "rejected" ? "Rejected" : "Draft"}
                     </span>
                   </button>
                 </li>
@@ -356,10 +379,11 @@ export function ProposalDrafts() {
             </div>
           ) : (
             <form onSubmit={saveDraft} className="space-y-4">
+              {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" && <div className="rounded-lg bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">This proposal is already {drafts.find((item) => item.id === draftId)?.status} and can no longer be changed.</div>}
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-stone-950">
-                    {draftId ? "Edit draft" : "New draft"}
+                    {draftId ? (drafts.find((item) => item.id === draftId)?.status === "draft" ? "Review or edit draft" : "Reviewed proposal") : "New draft"}
                   </h3>
                   <p className="mt-1 text-xs leading-5 text-stone-500">
                     Capture the outcome and enough reasoning for a teammate to
@@ -381,6 +405,7 @@ export function ProposalDrafts() {
                 </Button>
               </div>
 
+              <fieldset disabled={Boolean(draftId && drafts.find((item) => item.id === draftId)?.status !== "draft")} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_190px]">
                 <Field label="Title" required>
                   <Input
@@ -482,11 +507,18 @@ export function ProposalDrafts() {
                 </Field>
               </div>
 
+              </fieldset>
               <div className="flex flex-col-reverse gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-xs text-emerald-700">
-                  Draft only · not in the approved context library
+                  {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" ? `Reviewed · ${drafts.find((item) => item.id === draftId)?.publishedPath ?? "not published"}` : "Draft only · not in the approved context library"}
                 </div>
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-wrap justify-end gap-2">
+                  {draftId && drafts.find((item) => item.id === draftId)?.status === "draft" && <>
+                    <Button type="button" variant="outline" disabled={reviewBusy} onClick={() => reviewDraft("reject")}>Reject</Button>
+                    <Button type="button" disabled={reviewBusy} onClick={() => reviewDraft("approve")} className="bg-emerald-700 text-white hover:bg-emerald-800">{reviewBusy ? "Processing…" : "Approve & publish"}</Button>
+                  </>}
+                  {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" && <Button type="button" variant="outline" onClick={() => {setForm(null);setDraftId(null);}}>Close</Button>}
+                  {(!draftId || drafts.find((item) => item.id === draftId)?.status === "draft") && <>
                   <Button
                     type="button"
                     variant="outline"
@@ -510,6 +542,7 @@ export function ProposalDrafts() {
                         ? "Save changes"
                         : "Save draft"}
                   </Button>
+                  </>}
                 </div>
               </div>
             </form>

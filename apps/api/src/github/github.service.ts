@@ -13,6 +13,7 @@ import {
   randomBytes,
 } from 'node:crypto';
 import { DatabaseService } from '../database/database.service';
+import matter from 'gray-matter';
 
 type GithubUser = { id: number; login: string; avatar_url: string };
 type GithubRepository = {
@@ -646,6 +647,70 @@ export class GithubService {
       throw new BadGatewayException(
         'GitHub could not create the context folder. Check the app permissions and try again.',
       );
+  }
+
+  async publishContextRecord(userId: string, record: Record<string, unknown>) {
+    const projectResult = await this.db.query<{
+      repository_id: string;
+      owner: string;
+      name: string;
+      default_branch: string;
+    }>(
+      `SELECT repository_id,owner,name,default_branch FROM connected_projects WHERE user_id=$1 LIMIT 1`,
+      [userId],
+    );
+    if (!projectResult.rowCount)
+      throw new NotFoundException(
+        'Connect a project before publishing context.',
+      );
+    const project = projectResult.rows[0];
+    const access = await this.selectedInstallation(
+      userId,
+      Number(project.repository_id),
+    );
+    const title = String(record.title ?? 'context').toLowerCase();
+    const slug =
+      title
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 60) || 'context';
+    const path = `context/${String(record.type)}/${slug}-${String(record.id)}.md`;
+    const contents = matter.stringify('', record);
+    const response = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`,
+      {
+        method: 'PUT',
+        headers: {
+          ...this.githubHeaders(access.token),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: `docs(context): approve ${String(record.title).slice(0, 100)}`,
+          branch: project.default_branch,
+          content: Buffer.from(contents, 'utf8').toString('base64'),
+        }),
+      },
+    );
+    if (!response.ok) {
+      const detail = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+      throw new BadGatewayException(
+        detail?.message
+          ? `GitHub could not publish the approved context: ${detail.message}`
+          : 'GitHub could not publish the approved context. Check write access and try again.',
+      );
+    }
+    const result = (await response.json()) as {
+      content?: { path?: string };
+      commit?: { sha?: string };
+    };
+    return {
+      path: result.content?.path ?? path,
+      commitSha: result.commit?.sha ?? '',
+    };
   }
 
   private async installationToken(installationId: string) {

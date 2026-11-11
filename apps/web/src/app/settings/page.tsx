@@ -11,6 +11,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { LogoutButton } from "@/components/logout-button";
+import { McpAccess } from "@/components/mcp-access";
 import { LoadingScreen } from "@/components/loading-screen";
 import { SectionPage } from "@/components/workspace-shell";
 import { buttonVariants } from "@/components/ui/button";
@@ -199,6 +200,8 @@ async function SettingsContent() {
             </div>
           </div>
         </section>
+
+        <McpAccess />
 
         <section
           aria-label="Connection actions"
