@@ -53,16 +53,17 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 
 #### Phase 2B — Project connection and context entry (next)
 
-- Build project setup and connect a ContextOps project to a GitHub context repository.
+- Connect one ContextOps project to its existing GitHub code repository and use a `context/` folder there for approved project context. A separate GitHub context repository is not required for this MVP.
 - Replace the local fixture adapter with a GitHub-backed read adapter while keeping the same API and library behavior.
-- Add create, save, and edit draft proposals for all seven record types, including the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes.
-- Keep draft proposals separate from the approved context returned by the regular library and retrieval API.
+- Add PostgreSQL for the connected project configuration and saved draft proposals. GitHub remains the source of truth for approved context; PostgreSQL is app storage, not a second approved context store.
+- Let the user create, save, and edit a draft proposal with its question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes.
+- Keep saved drafts separate from approved context; the regular library and retrieval API must not return drafts.
 - Use example fixtures only as an optional demo fallback; show a clear connection or loading error when the configured GitHub repository cannot be read.
 - Defer branch/PR creation, automated validation, approval, and publishing to Phase 3.
 
-**Deliverable:** A project can connect to its GitHub context repository, read its structured context, and prepare saved draft proposals that preserve the discussion reasoning.
+**Deliverable:** The single demo project reads approved context from its existing GitHub code repo and saves new proposals as private-to-the-app drafts in PostgreSQL.
 
-**Complete when:** A user can connect a project to a GitHub context repository, browse and search its records, create and edit a draft for each of the seven record types, and confirm that drafts do not appear as approved context. The same read API continues to serve the approved library without exposing draft content.
+**Complete when:** The user can connect the demo project to its existing GitHub repo, browse and search approved context from `context/`, create and edit drafts, and confirm drafts do not appear in approved context or retrieval. Organization onboarding, multiple teams, member invitations, and role-based project access are explicitly deferred to Phase 8.
 
 ### Phase 3 — Add review and trust controls
 
@@ -125,6 +126,19 @@ Do this after the core product workflow works.
 
 **Complete when:** Both tools have a clear role in preparing the project demo, without expanding into a separate infrastructure project.
 
+### Phase 8 — Add organization, teams, and access (final phase)
+
+Do this after the single-project product and its DevOps demonstration work end to end.
+
+- Add organizations/workspaces and invite team members.
+- Let an organization manage multiple teams and projects, and let a project be shared with its relevant team members.
+- Add roles and permissions for viewing, proposing, and administering project context.
+- Treat GitHub contributors as suggestions for onboarding only; being a code-repo contributor must not automatically grant ContextOps access.
+
+**Deliverable:** An organization can manage its people, teams, and multiple projects with clear access boundaries.
+
+**Complete when:** Members can be onboarded, assigned to the right teams/projects, and only view or change context allowed by their role.
+
 ## 4. Development-first syllabus mapping
 
 | Syllabus area | How it supports ContextOps development | Evidence in the finished project/demo |
@@ -167,6 +181,7 @@ Use this as a planning estimate and adjust to the time available.
 | 5 | Project State, history, rollback | Handoffs and recovery work. |
 | 6 | Docker, Jenkins, Kubernetes, basic monitoring | Product is packaged and demonstrable. |
 | 7 | Small Ansible/Terraform additions and report | Course evidence is complete without distracting from the product. |
+| 8 | Organization, teams, and access | Multiple projects and their members have clear access boundaries. |
 
 If the available time is short, reduce dashboard polish and infrastructure depth before cutting the proposal, approval, published-context, MCP retrieval, or rollback flow. These are the defining parts of ContextOps.
 

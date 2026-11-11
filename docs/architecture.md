@@ -12,10 +12,11 @@ The first use case is Person A discussing PostgreSQL versus MySQL with ChatGPT, 
 |---|---|
 | Frontend | Next.js dashboard using shadcn/ui components. |
 | Backend | NestJS service for the product API, GitHub integration, validation, release operations, and MCP server. |
-| Source of truth | GitHub context repository with Markdown records and YAML front matter. |
+| Approved context source of truth | A `context/` folder in the project's existing GitHub code repository, using Markdown records and YAML front matter. A separate context repository is optional, not required for the MVP. |
+| Application storage | PostgreSQL is planned for connected-project settings and saved proposal drafts. It does not replace GitHub as the source of truth for approved context. |
 | Approval | GitHub pull requests and human review control acceptance. The application and MCP proposal tool cannot approve or merge. |
 | Published context | Immutable Git tag or commit-pinned snapshot, selected by one active release reference per project. |
-| Search | Begin with keyword and metadata search over the active GitHub-backed context. Add a database/search index only if needed as a rebuildable cache. |
+| Search | Begin with keyword and metadata search over approved GitHub-backed context. PostgreSQL also stores app configuration and drafts; drafts are excluded from approved-context retrieval. |
 | Development and local run | Ubuntu through WSL on Windows; Docker Compose for the dashboard and backend. |
 | Deployment demo | Add Kubernetes only after the core context workflow works. |
 
@@ -23,10 +24,11 @@ The first use case is Person A discussing PostgreSQL versus MySQL with ChatGPT, 
 
 ```mermaid
 flowchart LR
-  A[Person A and AI assistant] -->|submit context proposal| W[Next.js dashboard]
+  A[Person A and AI assistant] -->|write proposal draft| W[Next.js dashboard]
   B[Person B and reviewer] -->|review and approve| GH[GitHub context repository]
   W -->|REST API| API[NestJS API and MCP service]
-  API -->|branch and pull request| GH
+  API -->|save project settings and draft| DB[(PostgreSQL)]
+  API -->|Phase 3: branch and pull request| GH
   GH -->|approved merge| CI[Jenkins validation and publish pipeline]
   CI -->|validated immutable release| GH
   C[Person B and another AI assistant] -->|MCP query| API
@@ -51,8 +53,8 @@ The record types are Decision, Requirement, Constraint, Research, Rejected Appro
 ## Core information flow
 
 1. A teammate discusses a project question with an AI assistant.
-2. The teammate or assistant submits a context record with the useful reasoning trail.
-3. ContextOps opens a branch and pull request in the project's GitHub context repository.
+2. The teammate or assistant saves a proposal draft with the useful reasoning trail; in Phase 2B, the draft is stored in PostgreSQL.
+3. In Phase 3, ContextOps opens a branch and pull request in the project's existing GitHub code repository, placing the proposed approved record under `context/`.
 4. Validation checks the record structure and required metadata.
 5. A human reviewer approves and merges the pull request in GitHub.
 6. Jenkins publishes a validated, immutable context release. A failed publish leaves the previous release active.
@@ -80,7 +82,7 @@ contextrepo/
         └── project-state/
 ```
 
-The first read-only slice loads Markdown fixtures from `examples/demo-context/` through a repository adapter. The production context repository will be a separate GitHub repository linked by a ContextOps project; GitHub access and approval flows are not implemented yet.
+The first read-only slice loads Markdown fixtures from `examples/demo-context/` through a repository adapter. In Phase 2B, the demo project connects to its existing GitHub code repository and reads approved records from `context/`; a separate context repository remains an optional choice. PostgreSQL stores project connection settings and saved drafts, while approved context stays in GitHub. Organization membership, teams, and multi-project access are deferred to the final phase.
 
 ## Trust and access boundaries
 
