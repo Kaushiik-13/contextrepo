@@ -51,7 +51,7 @@ Create a GitHub App and fill its values in `apps/api/.env`:
 - Setup URL: `http://localhost:4000/api/auth/github/install/callback`.
 - Repository permissions: **Contents: Read and write** and **Metadata: Read-only**. Users choose which repositories to grant during installation.
 
-Restart the API after filling in these settings. Open `http://localhost:3000/setup` and choose **Continue with GitHub**. GitHub signs the user in and asks them to install the app for a personal account or organization and choose repositories. ContextOps then lets them select one of those repositories. If it has no `context/` folder, the user can ask ContextOps to add `context/README.md` to the default branch.
+Restart the API after filling in these settings. New users open `http://localhost:3000/signup`; returning users open `http://localhost:3000/login`. GitHub verifies the account. New accounts continue into app installation and repository setup; returning accounts go to their saved project. If `context/` is missing, the user can ask ContextOps to add `context/README.md` to the default branch.
 
 ## Account, repository, and UI behavior
 

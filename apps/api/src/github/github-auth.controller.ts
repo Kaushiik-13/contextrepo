@@ -27,14 +27,18 @@ export class GithubAuthController {
   }
 
   @Get('start')
-  start(@Res() response: Response) {
-    return this.beginAuthorization(response);
+  start(
+    @Query('intent') intent: string | undefined,
+    @Res() response: Response,
+  ) {
+    const authIntent = intent === 'signup' ? 'signup' : 'login';
+    return this.beginAuthorization(response, authIntent);
   }
 
   @Get('reconnect')
   reconnect(@Res() response: Response) {
     response.cookie(RECONNECT_COOKIE, '1', this.cookieOptions(10 * 60 * 1000));
-    return this.beginAuthorization(response);
+    return this.beginAuthorization(response, 'login');
   }
 
   @Get('callback')
@@ -44,21 +48,45 @@ export class GithubAuthController {
     @Req() request: Request,
     @Res() response: Response,
   ) {
+    let intent: 'login' | 'signup' = 'login';
     try {
-      this.github.verifyState(state, this.cookie(request, OAUTH_COOKIE));
+      const storedState = this.cookie(request, OAUTH_COOKIE)?.split('.');
+      const expectedState = storedState?.[0];
+      intent = storedState?.[1] === 'signup' ? 'signup' : 'login';
+      this.github.verifyState(state, expectedState);
       if (!code)
         throw new UnauthorizedException(
           'GitHub did not return a sign-in code.',
         );
-      const result = await this.github.finishAuthorization(code);
+      const result = await this.github.finishAuthorization(code, intent);
+      response.clearCookie(OAUTH_COOKIE, { path: '/' });
+      const reconnect = this.cookie(request, RECONNECT_COOKIE) === '1';
+      response.clearCookie(RECONNECT_COOKIE, { path: '/' });
+      if (result.accountStatus === 'not_found') {
+        return response.redirect(this.webUrl('/login?error=account_not_found'));
+      }
+      if (result.accountStatus === 'already_exists') {
+        return response.redirect(this.webUrl('/login?error=account_exists'));
+      }
       response.cookie(
         SESSION_COOKIE,
         result.session,
         this.cookieOptions(7 * 24 * 60 * 60 * 1000),
       );
-      response.clearCookie(OAUTH_COOKIE, { path: '/' });
-      const reconnect = this.cookie(request, RECONNECT_COOKIE) === '1';
-      response.clearCookie(RECONNECT_COOKIE, { path: '/' });
+      if (result.isNewUser) {
+        const installState = this.github.newState();
+        await this.github.savePendingAuthorization(
+          result.userId,
+          installState,
+          result.accessToken,
+        );
+        response.cookie(
+          INSTALL_COOKIE,
+          installState,
+          this.cookieOptions(10 * 60 * 1000),
+        );
+        return response.redirect(this.github.installationUrl(installState));
+      }
       if (result.hasProject && !reconnect) {
         return response.redirect(this.webUrl('/'));
       }
@@ -79,10 +107,9 @@ export class GithubAuthController {
       return response.redirect(this.github.installationUrl(installState));
     } catch (error) {
       response.clearCookie(OAUTH_COOKIE, { path: '/' });
+      response.clearCookie(RECONNECT_COOKIE, { path: '/' });
       return response.redirect(
-        this.webUrl(
-          `/setup?error=${encodeURIComponent('GitHub sign-in could not be completed. Please try again.')}`,
-        ),
+        this.webUrl(`/${intent}?error=github_signin_failed`),
       );
     }
   }
@@ -119,9 +146,7 @@ export class GithubAuthController {
     } catch (error) {
       response.clearCookie(INSTALL_COOKIE, { path: '/' });
       return response.redirect(
-        this.webUrl(
-          `/setup?error=${encodeURIComponent('GitHub repository setup could not be completed. Please reconnect and try again.')}`,
-        ),
+        this.webUrl(`/setup?error=github_install_failed`),
       );
     }
   }
@@ -146,9 +171,13 @@ export class GithubAuthController {
     return response.status(200).json({ ok: true });
   }
 
-  private beginAuthorization(response: Response) {
+  private beginAuthorization(response: Response, intent: 'login' | 'signup') {
     const state = this.github.newState();
-    response.cookie(OAUTH_COOKIE, state, this.cookieOptions(10 * 60 * 1000));
+    response.cookie(
+      OAUTH_COOKIE,
+      `${state}.${intent}`,
+      this.cookieOptions(10 * 60 * 1000),
+    );
     return response.redirect(this.github.authorizationUrl(state));
   }
 

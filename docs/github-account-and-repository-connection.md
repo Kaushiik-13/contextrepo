@@ -4,13 +4,13 @@ This document explains the current single-user, single-project onboarding flow. 
 
 ## What the user experiences
 
-1. The user opens ContextOps. If they do not have a valid session, they see the GitHub sign-in screen.
-2. GitHub signs them in and asks them to install the ContextOps GitHub App, or to choose repositories for an existing installation.
-3. ContextOps lists only repositories the GitHub App can access. The user selects one repository.
-4. ContextOps saves that project in Supabase. It checks whether `context/` exists and offers to create `context/README.md` if it does not.
-5. The user lands on the dashboard. The selected repository appears in the app navigation and dashboard; Settings shows the account, repository, visibility, default branch, context-folder status, and latest access check.
-6. On a later visit, ContextOps checks the session. A valid session returns the user to the dashboard. A signed-out or expired user signs in with GitHub again and is returned to their saved project.
-7. Signing out ends the ContextOps session only. It does not delete the saved project or uninstall the GitHub App. The user can change the selected repository, reconnect access, or revoke ContextOps from GitHub Settings.
+1. A new user opens `/signup`; a returning user opens `/login`. The login page links to signup, and signup links back to login.
+2. GitHub verifies the person. The API creates an account only from the signup flow; login requires an existing ContextOps account.
+3. A new account continues to GitHub App installation, then repository selection. A returning account with a saved repository goes directly to its dashboard. An account that has not finished setup resumes at repository selection.
+4. ContextOps lists only repositories the GitHub App can access. The user selects one repository.
+5. ContextOps saves that project in Supabase. It checks whether `context/` exists and offers to create `context/README.md` if it does not.
+6. The selected repository appears in the app navigation and dashboard; Settings shows the account, repository, visibility, default branch, context-folder status, and latest access check.
+7. Signing out ends the ContextOps session only. It does not delete the saved project or uninstall the GitHub App. The user can sign in again, change the selected repository, reconnect access, or revoke the app from GitHub Settings.
 
 ## Where the data lives
 

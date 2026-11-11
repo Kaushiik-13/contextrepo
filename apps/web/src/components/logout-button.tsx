@@ -23,7 +23,7 @@ export function LogoutButton() {
       });
       if (!response.ok)
         throw new Error("Could not sign out. Please try again.");
-      router.replace("/setup");
+      router.replace("/login");
       router.refresh();
     } catch (reason) {
       setError(

@@ -73,7 +73,7 @@ export class GithubService {
     }
   }
 
-  async finishAuthorization(code: string) {
+  async finishAuthorization(code: string, intent: 'login' | 'signup') {
     this.requireConfiguration();
     const tokenResponse = await fetch(
       'https://github.com/login/oauth/access_token',
@@ -107,34 +107,58 @@ export class GithubService {
     if (!response.ok)
       throw new BadGatewayException('Could not read your GitHub profile.');
     const user = (await response.json()) as GithubUser;
-    const saved = await this.db.query<{ id: string }>(
-      `INSERT INTO app_users (github_user_id, github_login, avatar_url)
+    let userId: string;
+    let isNewUser = false;
+    if (intent === 'login') {
+      const existing = await this.db.query<{ id: string }>(
+        'SELECT id FROM app_users WHERE github_user_id = $1',
+        [user.id],
+      );
+      if (!existing.rowCount) {
+        return { accountStatus: 'not_found' as const };
+      }
+      userId = existing.rows[0].id;
+      await this.db.query(
+        `UPDATE app_users
+         SET github_login = $1, avatar_url = $2, updated_at = NOW()
+         WHERE id = $3`,
+        [user.login, user.avatar_url, userId],
+      );
+    } else {
+      const inserted = await this.db.query<{ id: string }>(
+        `INSERT INTO app_users (github_user_id, github_login, avatar_url)
        VALUES ($1, $2, $3)
-       ON CONFLICT (github_user_id) DO UPDATE SET
-         github_login = EXCLUDED.github_login,
-         avatar_url = EXCLUDED.avatar_url,
-         updated_at = NOW()
+       ON CONFLICT (github_user_id) DO NOTHING
        RETURNING id`,
-      [user.id, user.login, user.avatar_url],
-    );
+        [user.id, user.login, user.avatar_url],
+      );
+      if (!inserted.rowCount) {
+        return { accountStatus: 'already_exists' as const };
+      }
+      userId = inserted.rows[0].id;
+      isNewUser = true;
+    }
+
     const session = randomBytes(32).toString('base64url');
     const sessionHash = this.hash(session);
     await this.db.query(
       `INSERT INTO app_sessions (session_hash, user_id, expires_at)
        VALUES ($1, $2, NOW() + INTERVAL '7 days')`,
-      [sessionHash, saved.rows[0].id],
+      [sessionHash, userId],
     );
     const projectResult = await this.db.query(
       'SELECT 1 FROM connected_projects WHERE user_id = $1 LIMIT 1',
-      [saved.rows[0].id],
+      [userId],
     );
     const installationResult = await this.db.query(
       'SELECT 1 FROM github_installations WHERE user_id = $1 LIMIT 1',
-      [saved.rows[0].id],
+      [userId],
     );
     return {
+      accountStatus: 'authenticated' as const,
       session,
-      userId: saved.rows[0].id,
+      userId,
+      isNewUser,
       accessToken: tokenBody.access_token,
       hasProject: Boolean(projectResult.rowCount),
       hasInstallation: Boolean(installationResult.rowCount),

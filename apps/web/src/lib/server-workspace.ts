@@ -67,7 +67,7 @@ export async function getWorkspaceState(): Promise<WorkspaceState | null> {
 
 export async function requireWorkspace(): Promise<WorkspaceState> {
   const state = await getWorkspaceState();
-  if (!state) redirect("/setup");
+  if (!state) redirect("/login");
   if (!state.project) redirect("/setup/repositories");
   return state;
 }

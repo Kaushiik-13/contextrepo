@@ -65,7 +65,7 @@ export function RepositorySetup() {
           repoResponse.status === 401 ||
           currentResponse.status === 401
         ) {
-          router.replace("/setup");
+          router.replace("/login");
           return;
         }
         if (!repoResponse.ok || !currentResponse.ok)
