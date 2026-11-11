@@ -53,14 +53,16 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 
 #### Phase 2B — Project connection and context entry (next)
 
-- Build project setup and link a project to its GitHub context repository.
-- Replace the local fixture adapter with a GitHub-backed read adapter while keeping the same API and screen.
-- Add create/edit proposal entry points for all seven record types.
-- Let a teammate turn an important AI discussion into a context proposal, including its decision trail and selected supporting conversation notes.
+- Build project setup and connect a ContextOps project to a GitHub context repository.
+- Replace the local fixture adapter with a GitHub-backed read adapter while keeping the same API and library behavior.
+- Add create, save, and edit draft proposals for all seven record types, including the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes.
+- Keep draft proposals separate from the approved context returned by the regular library and retrieval API.
+- Use example fixtures only as an optional demo fallback; show a clear connection or loading error when the configured GitHub repository cannot be read.
+- Defer branch/PR creation, automated validation, approval, and publishing to Phase 3.
 
-**Deliverable:** Users can connect a GitHub repository, explore structured context, and prepare proposals that preserve the discussion reasoning.
+**Deliverable:** A project can connect to its GitHub context repository, read its structured context, and prepare saved draft proposals that preserve the discussion reasoning.
 
-**Complete when:** The seven record types can be represented and browsed in the app.
+**Complete when:** A user can connect a project to a GitHub context repository, browse and search its records, create and edit a draft for each of the seven record types, and confirm that drafts do not appear as approved context. The same read API continues to serve the approved library without exposing draft content.
 
 ### Phase 3 — Add review and trust controls
 
