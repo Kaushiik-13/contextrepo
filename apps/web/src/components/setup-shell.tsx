@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { Layers3, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { ContextOpsMark } from "@/components/contextops-mark";
 
 const steps = [
   { label: "Connect GitHub", number: 1 },
@@ -29,7 +30,7 @@ export function SetupShell({
             aria-label="ContextOps sign in"
           >
             <span className="flex size-10 items-center justify-center rounded-xl bg-stone-950 text-white shadow-sm">
-              <Layers3 className="size-5" aria-hidden="true" />
+              <ContextOpsMark className="size-6" />
             </span>
             <span className="leading-tight">
               <span className="block text-sm font-semibold tracking-tight">

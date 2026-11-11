@@ -1,5 +1,5 @@
-import { Layers3 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContextOpsMark } from "@/components/contextops-mark";
 
 export function LoadingScreen({ variant }: { variant: "auth" | "workspace" }) {
   return variant === "auth" ? (
@@ -22,7 +22,7 @@ function AuthLoadingScreen() {
       <div className="mx-auto flex max-w-5xl flex-col">
         <header className="flex items-center gap-3">
           <span className="flex size-10 items-center justify-center rounded-xl bg-stone-950 text-white">
-            <Layers3 className="size-5" aria-hidden="true" />
+            <ContextOpsMark className="size-6" />
           </span>
           <span className="leading-tight">
             <span className="block text-sm font-semibold tracking-tight">
@@ -75,7 +75,7 @@ function WorkspaceLoadingScreen() {
       >
         <div className="flex items-center gap-3 px-2 py-1">
           <span className="flex size-9 items-center justify-center rounded-xl bg-stone-950 text-white">
-            <Layers3 className="size-4" aria-hidden="true" />
+            <ContextOpsMark className="size-5" />
           </span>
           <div className="space-y-1.5">
             <Skeleton className="h-3.5 w-24 bg-stone-300/70" />

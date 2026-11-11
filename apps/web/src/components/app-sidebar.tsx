@@ -6,7 +6,6 @@ import {
   ActivityIcon,
   BookOpenTextIcon,
   GitBranchIcon,
-  Layers3Icon,
   Settings2Icon,
 } from "lucide-react";
 
@@ -21,6 +20,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import type { WorkspaceProject, WorkspaceUser } from "@/lib/server-workspace";
+import { ContextOpsMark } from "@/components/contextops-mark";
 
 const primaryNavigation = [
   { title: "Context library", url: "/", icon: <BookOpenTextIcon /> },
@@ -50,7 +50,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" render={<Link href="/" />}>
               <span className="flex size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                <Layers3Icon className="size-4" aria-hidden="true" />
+                <ContextOpsMark className="size-5" />
               </span>
               <span className="grid flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-semibold">
