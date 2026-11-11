@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 
-import type { ContextRecord, ContextType } from "@/lib/context"
+import type { ContextRecord, ContextType } from "@/lib/context";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
 const labels: Record<ContextType, string> = {
   decision: "Decisions",
@@ -25,11 +25,11 @@ const labels: Record<ContextType, string> = {
   "rejected-approach": "Rejected",
   "open-question": "Open questions",
   "project-state": "Project state",
-}
+};
 
 const chartConfig = {
   records: { label: "Records", color: "var(--primary)" },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 const typeColors: Record<ContextType, string> = {
   decision: "#8b5cf6",
@@ -39,35 +39,56 @@ const typeColors: Record<ContextType, string> = {
   "rejected-approach": "#f43f5e",
   "open-question": "#f59e0b",
   "project-state": "#64748b",
-}
+};
 
-export function ChartAreaInteractive({ records }: { records: ContextRecord[] }) {
-  const types = Object.keys(labels) as ContextType[]
+export function ChartAreaInteractive({
+  records,
+}: {
+  records: ContextRecord[];
+}) {
+  const types = Object.keys(labels) as ContextType[];
   const chartData = types.map((type) => ({
     type: labels[type],
     color: typeColors[type],
     records: records.filter((record) => record.type === type).length,
-  }))
+  }));
 
   return (
-    <Card className="@container/card">
+    <Card className="@container/card border-stone-200 bg-white shadow-[0_14px_38px_-34px_rgba(28,25,23,0.38)]">
       <CardHeader>
         <CardTitle>Context distribution</CardTitle>
         <CardDescription>Number of records by type</CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[220px] w-full">
-          <BarChart data={chartData} accessibilityLayer margin={{ top: 8, right: 8, left: 8, bottom: 0 }}>
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[220px] w-full"
+        >
+          <BarChart
+            data={chartData}
+            accessibilityLayer
+            margin={{ top: 8, right: 8, left: 8, bottom: 0 }}
+          >
             <CartesianGrid vertical={false} />
-            <XAxis dataKey="type" tickLine={false} axisLine={false} tickMargin={8} />
+            <XAxis
+              dataKey="type"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
             <YAxis hide allowDecimals={false} />
-            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+            <ChartTooltip
+              cursor={false}
+              content={<ChartTooltipContent indicator="dot" />}
+            />
             <Bar dataKey="records" radius={4} maxBarSize={52}>
-              {chartData.map((entry) => <Cell key={entry.type} fill={entry.color} fillOpacity={0.82} />)}
+              {chartData.map((entry) => (
+                <Cell key={entry.type} fill={entry.color} fillOpacity={0.82} />
+              ))}
             </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }

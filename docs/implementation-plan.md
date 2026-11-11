@@ -51,19 +51,16 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 
 This first slice uses `examples/demo-context/` fixtures so the cross-assistant context idea can be seen before GitHub authentication is added.
 
-#### Phase 2B — Project connection and context entry (next)
+#### Phase 2B — Project connection and context entry (in progress)
 
-- Connect one ContextOps project to its existing GitHub code repository and use a `context/` folder there for approved project context. A separate GitHub context repository is not required for this MVP.
-- Replace the local fixture adapter with a GitHub-backed read adapter while keeping the same API and library behavior.
-- Add PostgreSQL for the connected project configuration and saved draft proposals. GitHub remains the source of truth for approved context; PostgreSQL is app storage, not a second approved context store.
-- Let the user create, save, and edit a draft proposal with its question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes.
-- Keep saved drafts separate from approved context; the regular library and retrieval API must not return drafts.
-- Use example fixtures only as an optional demo fallback; show a clear connection or loading error when the configured GitHub repository cannot be read.
-- Defer branch/PR creation, automated validation, approval, and publishing to Phase 3.
+- **2B.1 GitHub onboarding and persistence (implemented):** Show one GitHub sign-in/sign-up screen; let the user authorize ContextOps and install its GitHub App for a selected repository set; show one repository-selection screen; check for `context/`; if missing, offer to create `context/README.md` on the default branch. Store the GitHub identity/session, installation, and one selected project in Supabase PostgreSQL. Sessions expire after seven days; logout preserves the project connection. Verify installation ownership, keep the OAuth token encrypted only for the short setup callback, store session hashes (not raw session tokens), and provide GitHub access status/reconnect actions. Keep the private key and database URL in the ignored API `.env` file. The schema update is migration `002_persistent_github_connection.sql`.
+- **2B.2 Read approved context (next):** Replace the local fixture adapter with a GitHub-backed reader for the connected repository while keeping the same API and library behavior. Show a clear connection/loading error; use demo fixtures only as an optional fallback.
+- **2B.3 Save proposal drafts:** Add create, save, and edit for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Save drafts in PostgreSQL and keep them out of the approved library and retrieval API.
+- Defer pull-request creation for proposals, automated validation, human approval, and publishing to Phase 3. The folder initializer is setup scaffolding only; it does not publish a decision.
 
-**Deliverable:** The single demo project reads approved context from its existing GitHub code repo and saves new proposals as private-to-the-app drafts in PostgreSQL.
+**Deliverable:** The single demo project connects to GitHub, keeps approved context in its existing code repo, browses approved records, and saves new proposals as drafts in PostgreSQL.
 
-**Complete when:** The user can connect the demo project to its existing GitHub repo, browse and search approved context from `context/`, create and edit drafts, and confirm drafts do not appear in approved context or retrieval. Organization onboarding, multiple teams, member invitations, and role-based project access are explicitly deferred to Phase 8.
+**Complete when:** The user can sign in, connect one repo, initialize `context/` when needed, browse and search its approved context, create/edit drafts, and confirm drafts do not appear in approved context or retrieval. Organization onboarding, multiple teams, member invitations, and role-based project access are explicitly deferred to Phase 8.
 
 ### Phase 3 — Add review and trust controls
 

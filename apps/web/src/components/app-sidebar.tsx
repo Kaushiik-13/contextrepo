@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   ActivityIcon,
   BookOpenTextIcon,
   GitBranchIcon,
   Layers3Icon,
   Settings2Icon,
-} from "lucide-react"
+} from "lucide-react";
 
-import { NavMain } from "@/components/nav-main"
+import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
@@ -19,20 +19,29 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
+import type { WorkspaceProject, WorkspaceUser } from "@/lib/server-workspace";
 
 const primaryNavigation = [
   { title: "Context library", url: "/", icon: <BookOpenTextIcon /> },
   { title: "Proposals", url: "/proposals", icon: <GitBranchIcon /> },
   { title: "Activity", url: "/activity", icon: <ActivityIcon /> },
-]
+];
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const pathname = usePathname()
+export function AppSidebar({
+  user,
+  project,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  user: WorkspaceUser;
+  project: WorkspaceProject;
+}) {
+  const pathname = usePathname();
   const items = primaryNavigation.map((item) => ({
     ...item,
-    isActive: item.url === "/" ? pathname === "/" : pathname.startsWith(item.url),
-  }))
+    isActive:
+      item.url === "/" ? pathname === "/" : pathname.startsWith(item.url),
+  }));
 
   return (
     <Sidebar collapsible="icon" variant="inset" {...props}>
@@ -44,8 +53,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 <Layers3Icon className="size-4" aria-hidden="true" />
               </span>
               <span className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-semibold">ContextOps</span>
-                <span className="truncate text-xs text-sidebar-foreground/60">Team workspace</span>
+                <span className="truncate text-sm font-semibold">
+                  ContextOps
+                </span>
+                <span className="truncate text-xs text-sidebar-foreground/60">
+                  {project.fullName}
+                </span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -57,11 +70,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter className="flex-row items-center gap-1.5">
         <SidebarMenu className="min-w-0 flex-1 gap-0">
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="h-10 cursor-default gap-1.5 px-1.5 hover:bg-transparent active:bg-transparent">
-              <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">C</span>
+            <SidebarMenuButton
+              size="lg"
+              className="h-10 cursor-default gap-1.5 px-1.5 hover:bg-transparent active:bg-transparent"
+            >
+              <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
+                {user.login.slice(0, 1).toUpperCase()}
+              </span>
               <span className="grid min-w-0 flex-1 text-left leading-tight">
-                <span className="truncate text-xs font-medium">ContextOps Demo</span>
-                <span className="truncate text-[10px] text-sidebar-foreground/60">Local workspace</span>
+                <span className="truncate text-xs font-medium">
+                  {user.login}
+                </span>
+                <span className="truncate text-[10px] text-sidebar-foreground/60">
+                  GitHub connected
+                </span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -81,5 +103,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

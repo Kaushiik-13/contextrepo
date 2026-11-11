@@ -13,7 +13,7 @@ The first use case is Person A discussing PostgreSQL versus MySQL with ChatGPT, 
 | Frontend | Next.js dashboard using shadcn/ui components. |
 | Backend | NestJS service for the product API, GitHub integration, validation, release operations, and MCP server. |
 | Approved context source of truth | A `context/` folder in the project's existing GitHub code repository, using Markdown records and YAML front matter. A separate context repository is optional, not required for the MVP. |
-| Application storage | PostgreSQL is planned for connected-project settings and saved proposal drafts. It does not replace GitHub as the source of truth for approved context. |
+| Application storage | Supabase PostgreSQL stores GitHub sign-in sessions, the selected repository, and later saved proposal drafts. It does not replace GitHub as the source of truth for approved context. |
 | Approval | GitHub pull requests and human review control acceptance. The application and MCP proposal tool cannot approve or merge. |
 | Published context | Immutable Git tag or commit-pinned snapshot, selected by one active release reference per project. |
 | Search | Begin with keyword and metadata search over approved GitHub-backed context. PostgreSQL also stores app configuration and drafts; drafts are excluded from approved-context retrieval. |
@@ -24,11 +24,15 @@ The first use case is Person A discussing PostgreSQL versus MySQL with ChatGPT, 
 
 ```mermaid
 flowchart LR
-  A[Person A and AI assistant] -->|write proposal draft| W[Next.js dashboard]
-  B[Person B and reviewer] -->|review and approve| GH[GitHub context repository]
+  U[User] -->|GitHub sign-in and app install| GH[GitHub]
+  U -->|choose one repository| W[Next.js dashboard]
   W -->|REST API| API[NestJS API and MCP service]
-  API -->|save project settings and draft| DB[(PostgreSQL)]
+  API -->|save session and selected project| DB[(Supabase PostgreSQL)]
+  API -->|read or initialize context folder| GH
+  A[Person A and AI assistant] -->|write proposal draft| W
+  API -->|save draft| DB
   API -->|Phase 3: branch and pull request| GH
+  B[Person B and reviewer] -->|review and approve| GH
   GH -->|approved merge| CI[Jenkins validation and publish pipeline]
   CI -->|validated immutable release| GH
   C[Person B and another AI assistant] -->|MCP query| API
@@ -84,6 +88,8 @@ contextrepo/
 
 The first read-only slice loads Markdown fixtures from `examples/demo-context/` through a repository adapter. In Phase 2B, the demo project connects to its existing GitHub code repository and reads approved records from `context/`; a separate context repository remains an optional choice. PostgreSQL stores project connection settings and saved drafts, while approved context stays in GitHub. Organization membership, teams, and multi-project access are deferred to the final phase.
 
+The first Phase 2B onboarding slice is implemented: a user signs in with GitHub, installs the ContextOps GitHub App with repository access they select, connects one repository, and can ask ContextOps to add `context/README.md` on that repository's default branch. Supabase PostgreSQL stores the account, hashed ContextOps sessions, GitHub installation, and one connected project per user. Logout removes only the current session; the project and GitHub installation remain saved. GitHub access is checked and its status appears on the dashboard and in Settings. The dashboard's context library still displays clearly labeled local demo fixtures until the GitHub-backed reader is implemented. The detailed callback, session, and revocation flow is in `docs/github-account-and-repository-connection.md`.
+
 ## Trust and access boundaries
 
 - MCP retrieval returns published context only; drafts stay in pull requests.
@@ -93,6 +99,6 @@ The first read-only slice loads Markdown fixtures from `examples/demo-context/` 
 - Rollback changes the active release reference and keeps the original Git history.
 - Secrets are supplied through local environment configuration or a secret manager, never committed.
 
-## What is intentionally not designed yet
+## Still to design
 
-Detailed API schemas, MCP tool signatures, GitHub authentication method, frontend screens, and exact CI pipeline stages will be designed in later phases, against this architecture and the first end-to-end use case.
+MCP tool signatures, the GitHub-backed context reader, proposal API and screens, exact CI pipeline stages, and production hosting will be designed in later phases against this architecture and the first end-to-end use case. The current GitHub onboarding flow and shared UI rules are documented in `docs/github-account-and-repository-connection.md` and `docs/ui-guidelines.md`.
