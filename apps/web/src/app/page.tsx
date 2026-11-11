@@ -21,6 +21,15 @@ const TYPE_LABELS: Record<ContextType, string> = {
   "open-question": "Open question",
   "project-state": "Project state",
 }
+const TYPE_FILTER_COLORS: Record<ContextType, string> = {
+  decision: "text-violet-700 hover:bg-violet-50 data-[active=true]:bg-violet-100 data-[active=true]:text-violet-900 dark:text-violet-300 dark:hover:bg-violet-950/50 dark:data-[active=true]:bg-violet-950",
+  requirement: "text-blue-700 hover:bg-blue-50 data-[active=true]:bg-blue-100 data-[active=true]:text-blue-900 dark:text-blue-300 dark:hover:bg-blue-950/50 dark:data-[active=true]:bg-blue-950",
+  constraint: "text-orange-700 hover:bg-orange-50 data-[active=true]:bg-orange-100 data-[active=true]:text-orange-900 dark:text-orange-300 dark:hover:bg-orange-950/50 dark:data-[active=true]:bg-orange-950",
+  research: "text-cyan-700 hover:bg-cyan-50 data-[active=true]:bg-cyan-100 data-[active=true]:text-cyan-900 dark:text-cyan-300 dark:hover:bg-cyan-950/50 dark:data-[active=true]:bg-cyan-950",
+  "rejected-approach": "text-rose-700 hover:bg-rose-50 data-[active=true]:bg-rose-100 data-[active=true]:text-rose-900 dark:text-rose-300 dark:hover:bg-rose-950/50 dark:data-[active=true]:bg-rose-950",
+  "open-question": "text-amber-700 hover:bg-amber-50 data-[active=true]:bg-amber-100 data-[active=true]:text-amber-900 dark:text-amber-300 dark:hover:bg-amber-950/50 dark:data-[active=true]:bg-amber-950",
+  "project-state": "text-slate-600 hover:bg-slate-100 data-[active=true]:bg-slate-200 data-[active=true]:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-900 dark:data-[active=true]:bg-slate-800",
+}
 
 type SearchParams = Promise<{ q?: string; type?: string }>
 
@@ -46,8 +55,8 @@ function filterHref(search: string, type: string) {
   return query ? `/?${query}` : "/"
 }
 
-function FilterLink({ label, active, href }: { label: string; active: boolean; href: string }) {
-  return <a href={href} aria-current={active ? "page" : undefined} className={`shrink-0 rounded-md px-3 py-1.5 text-xs transition-colors ${active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"}`}>{label}</a>
+function FilterLink({ label, active, href, color }: { label: string; active: boolean; href: string; color?: string }) {
+  return <a href={href} aria-current={active ? "page" : undefined} data-active={active} className={`shrink-0 rounded-md px-3 py-1.5 text-xs transition-colors ${color ?? (active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground")} ${active ? "font-medium" : ""}`}>{label}</a>
 }
 
 function LoadingShell() {
@@ -105,7 +114,7 @@ async function ContextDashboard({ searchParams }: { searchParams: SearchParams }
           </form>
           <nav aria-label="Filter by context type" className="flex gap-1 overflow-x-auto border-b pb-2">
             <FilterLink label="All types" active={!activeType} href={filterHref(search, "")} />
-            {TYPES.map((type) => <FilterLink key={type} label={TYPE_LABELS[type]} active={activeType === type} href={filterHref(search, type)} />)}
+            {TYPES.map((type) => <FilterLink key={type} label={TYPE_LABELS[type]} active={activeType === type} href={filterHref(search, type)} color={TYPE_FILTER_COLORS[type]} />)}
           </nav>
           <ContextRecordTable records={result.items} />
           <p className="text-xs text-muted-foreground">Demo records only. The database decision shown in an example record is not a ContextOps database choice.</p>

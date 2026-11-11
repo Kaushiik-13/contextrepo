@@ -1,6 +1,6 @@
 "use client"
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts"
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts"
 
 import type { ContextRecord, ContextType } from "@/lib/context"
 import {
@@ -31,10 +31,21 @@ const chartConfig = {
   records: { label: "Records", color: "var(--primary)" },
 } satisfies ChartConfig
 
+const typeColors: Record<ContextType, string> = {
+  decision: "#8b5cf6",
+  requirement: "#3b82f6",
+  constraint: "#f97316",
+  research: "#06b6d4",
+  "rejected-approach": "#f43f5e",
+  "open-question": "#f59e0b",
+  "project-state": "#64748b",
+}
+
 export function ChartAreaInteractive({ records }: { records: ContextRecord[] }) {
   const types = Object.keys(labels) as ContextType[]
   const chartData = types.map((type) => ({
     type: labels[type],
+    color: typeColors[type],
     records: records.filter((record) => record.type === type).length,
   }))
 
@@ -51,7 +62,9 @@ export function ChartAreaInteractive({ records }: { records: ContextRecord[] }) 
             <XAxis dataKey="type" tickLine={false} axisLine={false} tickMargin={8} />
             <YAxis hide allowDecimals={false} />
             <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-            <Bar dataKey="records" fill="var(--color-records)" radius={4} maxBarSize={52} />
+            <Bar dataKey="records" radius={4} maxBarSize={52}>
+              {chartData.map((entry) => <Cell key={entry.type} fill={entry.color} fillOpacity={0.82} />)}
+            </Bar>
           </BarChart>
         </ChartContainer>
       </CardContent>

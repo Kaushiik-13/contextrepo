@@ -32,6 +32,16 @@ const typeMeta: Record<ContextType, { label: string; icon: typeof Database }> = 
   "project-state": { label: "Project state", icon: Clock3 },
 }
 
+const typeColors: Record<ContextType, string> = {
+  decision: "border-violet-200 bg-violet-50 text-violet-800 dark:border-violet-900 dark:bg-violet-950/50 dark:text-violet-300",
+  requirement: "border-blue-200 bg-blue-50 text-blue-800 dark:border-blue-900 dark:bg-blue-950/50 dark:text-blue-300",
+  constraint: "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-900 dark:bg-orange-950/50 dark:text-orange-300",
+  research: "border-cyan-200 bg-cyan-50 text-cyan-800 dark:border-cyan-900 dark:bg-cyan-950/50 dark:text-cyan-300",
+  "rejected-approach": "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-300",
+  "open-question": "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/50 dark:text-amber-300",
+  "project-state": "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300",
+}
+
 function formatDate(value: string) {
   if (!value) return "Recently updated"
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(`${value}T00:00:00`))
@@ -39,7 +49,7 @@ function formatDate(value: string) {
 
 function TypeBadge({ type }: { type: ContextType }) {
   const { label, icon: Icon } = typeMeta[type]
-  return <Badge variant="outline" className="gap-1.5 font-normal"><Icon className="size-3.5" aria-hidden="true" />{label}</Badge>
+  return <Badge variant="outline" className={`gap-1.5 font-medium ${typeColors[type]}`}><Icon className="size-3.5" aria-hidden="true" />{label}</Badge>
 }
 
 function DetailGroup({ title, children }: { title: string; children: React.ReactNode }) {
