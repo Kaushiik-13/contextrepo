@@ -5,8 +5,9 @@ import { resolve } from 'node:path';
 import matter from 'gray-matter';
 import {
   CONTEXT_TYPES,
-  ContextRecord,
-  ContextRepository,
+  type ContextRecord,
+  type ContextReadResult,
+  type ContextRepository,
   ContextType,
 } from './context.types';
 
@@ -16,13 +17,21 @@ export class DemoContextRepository implements ContextRepository {
     ? resolve(process.env.CONTEXT_REPOSITORY_PATH)
     : resolve(process.cwd(), '../../examples/demo-context');
 
-  async listApproved(): Promise<ContextRecord[]> {
+  async listApproved(_userId: string): Promise<ContextReadResult> {
     const files = await this.findMarkdownFiles(this.root);
-    const records = await Promise.all(files.map((file) => this.readRecord(file)));
+    const records = await Promise.all(
+      files.map((file) => this.readRecord(file)),
+    );
 
-    return records
-      .filter((record) => record.status === 'approved')
-      .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
+    return {
+      items: records
+        .filter((record) => record.status === 'approved')
+        .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
+      repository: 'ContextOps demo',
+      branch: 'main',
+      contextFolderExists: true,
+      warnings: [],
+    };
   }
 
   private async findMarkdownFiles(directory: string): Promise<string[]> {

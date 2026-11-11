@@ -23,7 +23,7 @@ This document explains the current single-user, single-project onboarding flow. 
 | Approved project knowledge | The selected project's GitHub `context/` folder | Keep approved context in the existing project repository and Git history. |
 | Supabase URL and GitHub App credentials | `apps/api/.env` (ignored by Git) | Let the API connect to Supabase and GitHub. Never commit these secrets. |
 
-Supabase stores ContextOps account and connection metadata. It does not replace GitHub as the future source of truth for approved context records. The library currently shows demo records; GitHub-backed reading is a later Phase 2B task.
+Supabase stores ContextOps account and connection metadata. It does not replace GitHub as the source of truth for approved context records. The library reads approved Markdown files from the selected repository's `context/` folder on its default branch. The supported fields and an example are in [`context-record-format.md`](context-record-format.md).
 
 ## Session and security behavior
 

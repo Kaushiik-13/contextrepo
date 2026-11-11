@@ -54,11 +54,11 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 #### Phase 2B — Project connection and context entry (in progress)
 
 - **2B.1 GitHub onboarding and persistence (implemented):** Show one GitHub sign-in/sign-up screen; let the user authorize ContextOps and install its GitHub App for a selected repository set; show one repository-selection screen; check for `context/`; if missing, offer to create `context/README.md` on the default branch. Store the GitHub identity/session, installation, and one selected project in Supabase PostgreSQL. Sessions expire after seven days; logout preserves the project connection. Verify installation ownership, keep the OAuth token encrypted only for the short setup callback, store session hashes (not raw session tokens), and provide GitHub access status/reconnect actions. Keep the private key and database URL in the ignored API `.env` file. The schema update is migration `002_persistent_github_connection.sql`.
-- **2B.2 Read approved context (next):** Replace the local fixture adapter with a GitHub-backed reader for the connected repository while keeping the same API and library behavior. Show a clear connection/loading error; use demo fixtures only as an optional fallback.
+- **2B.2 Read approved context (implemented):** The authenticated library reads Markdown files from the connected repository's `context/` folder on its default branch. It displays only records with `status: approved`, skips drafts and `README.md`, validates record fields, and reports invalid files by path. Search, type filters, record details, and summary cards use GitHub data. Missing folders, empty folders, unreadable files, and API errors have explicit UI states. There is no silent fixture fallback.
 - **2B.3 Save proposal drafts:** Add create, save, and edit for all seven record types, preserving the question, outcome, rationale, constraints, alternatives, tags, and selected discussion/source notes. Save drafts in PostgreSQL and keep them out of the approved library and retrieval API.
 - Defer pull-request creation for proposals, automated validation, human approval, and publishing to Phase 3. The folder initializer is setup scaffolding only; it does not publish a decision.
 
-**Deliverable:** The single demo project connects to GitHub, keeps approved context in its existing code repo, browses approved records, and saves new proposals as drafts in PostgreSQL.
+**Current deliverable:** The single demo project connects to GitHub and reads approved context from its existing code repository. Saving proposal drafts is the next 2B.3 slice.
 
 **Complete when:** The user can sign in, connect one repo, initialize `context/` when needed, browse and search its approved context, create/edit drafts, and confirm drafts do not appear in approved context or retrieval. Organization onboarding, multiple teams, member invitations, and role-based project access are explicitly deferred to Phase 8.
 
@@ -243,7 +243,6 @@ These are planning decisions for the first version. They can be adjusted if a co
 4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
 
 This document is a plan, not a record of completed implementation. Confirm with the mentor whether Jenkins is required instead of GitHub Actions and whether the proposed local Kubernetes, Terraform, and Ansible demonstrations satisfy the course expectations.
-
 
 
 

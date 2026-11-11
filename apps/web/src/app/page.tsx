@@ -1,6 +1,7 @@
 import { AlertCircle, GitBranch, Search, Sparkles } from "lucide-react";
 import { Suspense } from "react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { ChartAreaInteractive } from "@/components/chart-area-interactive";
 import { ContextRecordTable } from "@/components/context-record-table";
@@ -50,19 +51,62 @@ const TYPE_FILTER_COLORS: Record<ContextType, string> = {
 };
 
 type SearchParams = Promise<{ q?: string; type?: string }>;
+type ContextApiResponse = {
+  items: ContextRecord[];
+  total: number;
+  repository: string;
+  branch: string;
+  contextFolderExists: boolean;
+  warnings: string[];
+};
 
 async function getContext(search: string, type: string) {
   const url = new URL(`${API_URL}/context`);
   if (search) url.searchParams.set("q", search);
   if (type) url.searchParams.set("type", type);
-  try {
-    const response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) return { items: [] as ContextRecord[], error: true };
-    const result = (await response.json()) as { items: ContextRecord[] };
-    return { items: result.items, error: false };
-  } catch {
-    return { items: [] as ContextRecord[], error: true };
+  const session = (await cookies()).get("contextops_session")?.value;
+  if (!session) {
+    return {
+      data: null,
+      error: "Your sign-in has expired. Please sign in again.",
+      needsSignIn: true,
+    };
   }
+
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { Cookie: `contextops_session=${encodeURIComponent(session)}` },
+      cache: "no-store",
+    });
+  } catch {
+    return {
+      data: null,
+      error:
+        "Could not reach the ContextOps API. Make sure NestJS is running, then retry.",
+      needsSignIn: false,
+    };
+  }
+  if (response.status === 401) {
+    return {
+      data: null,
+      error: "Your sign-in has expired. Please sign in again.",
+      needsSignIn: true,
+    };
+  }
+  const body = (await response.json().catch(() => null)) as
+    (ContextApiResponse & { message?: string }) | null;
+  if (!response.ok || !body) {
+    return {
+      data: null,
+      error:
+        response.status === 502
+          ? "GitHub could not load context from this repository. Check the GitHub connection in Settings and try again."
+          : (body?.message ?? "Context could not be loaded from GitHub."),
+      needsSignIn: false,
+    };
+  }
+  return { data: body, error: null, needsSignIn: false };
 }
 
 function filterHref(search: string, type: string) {
@@ -119,6 +163,10 @@ async function ContextDashboard({
   const search = params.q?.trim() ?? "";
   const activeType = params.type ?? "";
   const result = await getContext(search, activeType);
+  const records = result.data?.items ?? [];
+  const showRecordsView =
+    result.data?.contextFolderExists === true &&
+    (records.length > 0 || Boolean(search) || Boolean(activeType));
 
   return (
     <WorkspaceShell activePage="library" workspace={workspace}>
@@ -152,7 +200,9 @@ async function ContextDashboard({
               variant="outline"
               className="w-fit gap-1.5 border-stone-200 bg-white font-normal text-stone-600"
             >
-              Sample records
+              {result.error
+                ? "GitHub context source"
+                : `Live GitHub · ${result.data?.branch ?? project.defaultBranch}`}
             </Badge>
           </div>
         </div>
@@ -196,88 +246,173 @@ async function ContextDashboard({
               aria-hidden="true"
             />
             <div>
-              <p className="font-medium">The context service isn’t running.</p>
-              <p className="mt-1 text-xs">
-                Start the NestJS API, then refresh the page.
-              </p>
+              <p className="font-medium">Could not load project context</p>
+              <p className="mt-1 text-xs">{result.error}</p>
             </div>
+            {result.needsSignIn ? (
+              <Link
+                href="/login"
+                className={buttonVariants({
+                  variant: "outline",
+                  className:
+                    "ml-auto h-8 shrink-0 border-current bg-white/80 px-3 text-xs",
+                })}
+              >
+                Sign in
+              </Link>
+            ) : (
+              <Link
+                href={filterHref(search, activeType)}
+                className={buttonVariants({
+                  variant: "outline",
+                  className:
+                    "ml-auto h-8 shrink-0 border-current bg-white/80 px-3 text-xs",
+                })}
+              >
+                Try again
+              </Link>
+            )}
           </div>
         )}
 
-        <SectionCards records={result.items} />
-        <div className="px-4 lg:px-6">
-          <ChartAreaInteractive records={result.items} />
-        </div>
-
-        <section
-          aria-labelledby="context-records-heading"
-          className="space-y-4 px-4 lg:px-6"
-        >
-          <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+        {result.data?.contextFolderExists === false && (
+          <div className="mx-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between lg:mx-6">
             <div>
-              <h3
-                id="context-records-heading"
-                className="text-lg font-semibold tracking-tight"
-              >
-                Context records
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {result.items.length}{" "}
-                {result.items.length === 1 ? "record" : "records"} · Select a
-                row to see its reasoning.
+              <p className="font-medium">The context folder is missing</p>
+              <p className="mt-1 text-xs leading-5">
+                Create `context/` in the connected repository to start keeping
+                approved project records there.
               </p>
             </div>
-            <Button disabled variant="outline" className="w-fit">
-              <Sparkles className="mr-2 size-4" aria-hidden="true" />
-              Propose context · coming later
-            </Button>
+            <Link
+              href="/setup/context"
+              className={buttonVariants({
+                variant: "outline",
+                className:
+                  "h-8 shrink-0 border-amber-300 bg-white px-3 text-xs text-amber-950 hover:bg-amber-100",
+              })}
+            >
+              Set up folder
+            </Link>
           </div>
+        )}
 
-          <form action="/" method="get" className="flex gap-2">
-            {activeType && (
-              <input type="hidden" name="type" value={activeType} />
+        {result.data?.warnings.length ? (
+          <div
+            role="status"
+            className="mx-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950 lg:mx-6"
+          >
+            <p className="font-medium">Some context files need attention</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-xs leading-5">
+              {result.data.warnings.slice(0, 4).map((warning) => (
+                <li key={warning}>{warning}</li>
+              ))}
+            </ul>
+            {result.data.warnings.length > 4 && (
+              <p className="mt-2 text-xs">
+                And {result.data.warnings.length - 4} more file warnings.
+              </p>
             )}
-            <div className="relative min-w-0 flex-1">
-              <Search
-                className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          </div>
+        ) : null}
+
+        {records.length > 0 && (
+          <>
+            <SectionCards records={records} />
+            <div className="px-4 lg:px-6">
+              <ChartAreaInteractive records={records} />
+            </div>
+          </>
+        )}
+
+        {result.data?.contextFolderExists &&
+          records.length === 0 &&
+          !search &&
+          !activeType &&
+          !result.error && (
+            <div className="mx-4 rounded-2xl border border-stone-200 bg-white px-6 py-10 text-center shadow-[0_16px_50px_-42px_rgba(28,25,23,0.42)] lg:mx-6">
+              <GitBranch
+                className="mx-auto size-8 text-violet-700"
                 aria-hidden="true"
               />
-              <Input
-                type="search"
-                name="q"
-                defaultValue={search}
-                placeholder="Search decisions, reasoning, constraints…"
-                aria-label="Search context records"
-                className="pl-9"
-              />
+              <h3 className="mt-3 text-base font-semibold text-stone-950">
+                No approved context yet
+              </h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-stone-600">
+                ContextOps reads approved Markdown records from the `context/`
+                folder on the {result.data.branch} branch. Add a record with
+                approved YAML front matter and it will appear here.
+              </p>
             </div>
-            <Button type="submit">Search</Button>
-          </form>
-          <nav
-            aria-label="Filter by context type"
-            className="flex gap-1 overflow-x-auto border-b pb-2"
+          )}
+
+        {showRecordsView && (
+          <section
+            aria-labelledby="context-records-heading"
+            className="space-y-4 px-4 lg:px-6"
           >
-            <FilterLink
-              label="All types"
-              active={!activeType}
-              href={filterHref(search, "")}
-            />
-            {TYPES.map((type) => (
+            <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                <h3
+                  id="context-records-heading"
+                  className="text-lg font-semibold tracking-tight"
+                >
+                  Context records
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {result.data?.total ?? 0}{" "}
+                  {(result.data?.total ?? 0) === 1 ? "record" : "records"} ·
+                  Select a row to see its reasoning.
+                </p>
+              </div>
+              <Button disabled variant="outline" className="w-fit">
+                <Sparkles className="mr-2 size-4" aria-hidden="true" />
+                Propose context · coming later
+              </Button>
+            </div>
+
+            <form action="/" method="get" className="flex gap-2">
+              {activeType && (
+                <input type="hidden" name="type" value={activeType} />
+              )}
+              <div className="relative min-w-0 flex-1">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  type="search"
+                  name="q"
+                  defaultValue={search}
+                  placeholder="Search decisions, reasoning, constraints…"
+                  aria-label="Search context records"
+                  className="pl-9"
+                />
+              </div>
+              <Button type="submit">Search</Button>
+            </form>
+            <nav
+              aria-label="Filter by context type"
+              className="flex gap-1 overflow-x-auto border-b pb-2"
+            >
               <FilterLink
-                key={type}
-                label={TYPE_LABELS[type]}
-                active={activeType === type}
-                href={filterHref(search, type)}
-                color={TYPE_FILTER_COLORS[type]}
+                label="All types"
+                active={!activeType}
+                href={filterHref(search, "")}
               />
-            ))}
-          </nav>
-          <ContextRecordTable records={result.items} />
-          <p className="text-xs text-muted-foreground">
-            Demo records only. The database decision shown in an example record
-            is not a ContextOps database choice.
-          </p>
-        </section>
+              {TYPES.map((type) => (
+                <FilterLink
+                  key={type}
+                  label={TYPE_LABELS[type]}
+                  active={activeType === type}
+                  href={filterHref(search, type)}
+                  color={TYPE_FILTER_COLORS[type]}
+                />
+              ))}
+            </nav>
+            <ContextRecordTable records={records} />
+          </section>
+        )}
       </div>
     </WorkspaceShell>
   );

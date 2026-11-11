@@ -9,11 +9,11 @@ export class ContextService {
     private readonly repository: ContextRepository,
   ) {}
 
-  async list(query?: string, type?: string) {
-    const records = await this.repository.listApproved();
+  async list(userId: string, query?: string, type?: string) {
+    const source = await this.repository.listApproved(userId);
     const normalizedQuery = query?.trim().toLocaleLowerCase();
 
-    const items = records.filter((record) => {
+    const items = source.items.filter((record) => {
       const matchesType = !type || record.type === type;
       if (!matchesType) return false;
       if (!normalizedQuery) return true;
@@ -21,14 +21,15 @@ export class ContextService {
       return this.searchableText(record).includes(normalizedQuery);
     });
 
-    return { items, total: items.length };
+    return { ...source, items, total: items.length };
   }
 
-  async getById(id: string): Promise<ContextRecord> {
-    const record = (await this.repository.listApproved()).find(
+  async getById(userId: string, id: string): Promise<ContextRecord> {
+    const record = (await this.repository.listApproved(userId)).items.find(
       (item) => item.id === id,
     );
-    if (!record) throw new NotFoundException(`Context record "${id}" was not found.`);
+    if (!record)
+      throw new NotFoundException(`Context record "${id}" was not found.`);
     return record;
   }
 

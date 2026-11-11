@@ -13,9 +13,9 @@ See [the architecture](docs/architecture.md) and [the implementation plan](docs/
 
 ## Current progress
 
-Phase 1 architecture and project skeleton are complete. The first Phase 2 slice is implemented: seven sample Markdown records can be read through the NestJS API, searched/filtered in the Next.js dashboard, and opened to inspect their reasoning trail.
+Phase 1 architecture and project skeleton are complete. Phase 2A established the record model and dashboard using sample Markdown. Phase 2B.2 replaces the sample data with approved records read from the signed-in user's connected GitHub repository, while preserving search, filters, and record details.
 
-GitHub sign-in, one-repository selection, persistent project settings, and context-folder setup are implemented as the first Phase 2B onboarding slice. The library still displays clearly labeled local demo fixtures; live GitHub context browsing, editable proposals, pull-request review, and MCP retrieval remain upcoming work.
+GitHub sign-in, one-repository selection, persistent project settings, and context-folder setup are implemented. The library reads only approved Markdown records from the connected repository's `context/` folder; drafts are ignored. See [the context record format](docs/context-record-format.md) to add a record. Editable proposals are the next slice; pull-request review and MCP retrieval are later phases.
 
 ## Start the development servers
 

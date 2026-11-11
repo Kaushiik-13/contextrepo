@@ -24,6 +24,14 @@ type GithubRepository = {
   default_branch: string;
   owner: { login: string };
 };
+type GithubContentEntry = {
+  name: string;
+  path: string;
+  type: 'file' | 'dir' | 'symlink' | 'submodule';
+  size?: number;
+  content?: string;
+  encoding?: string;
+};
 
 @Injectable()
 export class GithubService {
@@ -471,6 +479,140 @@ export class GithubService {
     const result = (await response.json()) as
       { type?: string } | Array<{ type?: string }>;
     return Array.isArray(result) || result.type === 'dir';
+  }
+
+  async readContextFiles(userId: string) {
+    const projectResult = await this.db.query<{
+      id: string;
+      repository_id: string;
+      owner: string;
+      name: string;
+      full_name: string;
+      default_branch: string;
+    }>(
+      `SELECT id, repository_id, owner, name, full_name, default_branch
+       FROM connected_projects WHERE user_id = $1 LIMIT 1`,
+      [userId],
+    );
+    if (!projectResult.rowCount) {
+      throw new NotFoundException(
+        'Connect a GitHub project before browsing context.',
+      );
+    }
+
+    const project = projectResult.rows[0];
+    const access = await this.selectedInstallation(
+      userId,
+      Number(project.repository_id),
+    );
+    const warnings: string[] = [];
+    const files: Array<{ path: string; content: string }> = [];
+    const apiRoot = `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/contents`;
+    const readDirectory = async (path: string, depth = 0): Promise<boolean> => {
+      if (depth > 16) {
+        warnings.push(`${path}: folder nesting is too deep to read safely.`);
+        return true;
+      }
+      const encodedPath = path
+        .split('/')
+        .map((part) => encodeURIComponent(part))
+        .join('/');
+      const url = new URL(`${apiRoot}/${encodedPath}`);
+      url.searchParams.set('ref', project.default_branch);
+      const response = await fetch(url, {
+        headers: this.githubHeaders(access.token),
+      });
+      if (response.status === 404) {
+        if (path === 'context') return false;
+        warnings.push(`${path}: folder could not be read from GitHub.`);
+        return true;
+      }
+      if (!response.ok) {
+        throw new BadGatewayException(
+          'Could not read the connected project context from GitHub. Check the app access and try again.',
+        );
+      }
+      const entries = (await response.json()) as GithubContentEntry[];
+      if (!Array.isArray(entries)) {
+        warnings.push(`${path}: expected a folder but GitHub returned a file.`);
+        return true;
+      }
+      if (entries.length >= 1000) {
+        warnings.push(`${path}: this folder is too large to list completely.`);
+      }
+
+      await Promise.all(
+        entries.map(async (entry) => {
+          const pathParts = entry.path.split('/');
+          if (
+            pathParts[0] !== 'context' ||
+            pathParts.some((part) => part === '.' || part === '..')
+          ) {
+            warnings.push(
+              `${entry.path}: GitHub returned an unsafe file path.`,
+            );
+            return;
+          }
+          if (entry.type === 'dir') {
+            await readDirectory(entry.path, depth + 1);
+            return;
+          }
+          if (
+            entry.type !== 'file' ||
+            !entry.name.toLowerCase().endsWith('.md') ||
+            entry.name.toLowerCase() === 'readme.md'
+          ) {
+            return;
+          }
+          if (entry.size && entry.size > 1_000_000) {
+            warnings.push(
+              `${entry.path}: Markdown files must be smaller than 1 MB.`,
+            );
+            return;
+          }
+
+          const filePath = entry.path
+            .split('/')
+            .map((part) => encodeURIComponent(part))
+            .join('/');
+          const fileUrl = new URL(`${apiRoot}/${filePath}`);
+          fileUrl.searchParams.set('ref', project.default_branch);
+          const fileResponse = await fetch(fileUrl, {
+            headers: this.githubHeaders(access.token),
+          });
+          if (!fileResponse.ok) {
+            warnings.push(`${entry.path}: GitHub could not load this file.`);
+            return;
+          }
+          const file = (await fileResponse.json()) as GithubContentEntry;
+          if (file.encoding !== 'base64' || typeof file.content !== 'string') {
+            warnings.push(
+              `${entry.path}: GitHub did not return readable Markdown.`,
+            );
+            return;
+          }
+          files.push({
+            path: entry.path,
+            content: Buffer.from(file.content, 'base64').toString('utf8'),
+          });
+        }),
+      );
+      return true;
+    };
+
+    const contextFolderExists = await readDirectory('context');
+    await this.db.query(
+      'UPDATE connected_projects SET context_status = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3',
+      [contextFolderExists ? 'ready' : 'missing', project.id, userId],
+    );
+    return {
+      files,
+      warnings,
+      contextFolderExists,
+      projectId: project.id,
+      repository: project.full_name,
+      branch: project.default_branch,
+    };
   }
 
   async createContextReadme(
