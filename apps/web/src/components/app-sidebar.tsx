@@ -72,7 +72,11 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="h-10 cursor-default gap-1.5 px-1.5 hover:bg-transparent active:bg-transparent"
+              tooltip="Account settings"
+              aria-label={`${user.login} account settings`}
+              isActive={pathname.startsWith("/settings")}
+              render={<Link href="/settings" />}
+              className="h-10 gap-1.5 px-1.5 hover:bg-slate-200/70 hover:text-foreground data-active:bg-white data-active:text-violet-900 data-active:shadow-sm data-active:ring-1 data-active:ring-violet-200 data-active:hover:bg-white dark:hover:bg-slate-800 dark:data-active:bg-slate-900 dark:data-active:text-violet-200 dark:data-active:ring-violet-900"
             >
               <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">
                 {user.login.slice(0, 1).toUpperCase()}
@@ -88,7 +92,7 @@ export function AppSidebar({
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <SidebarMenu className="w-9 shrink-0 p-0">
+        <SidebarMenu className="group-data-[collapsible=icon]:hidden w-9 shrink-0 p-0">
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip="Settings"
