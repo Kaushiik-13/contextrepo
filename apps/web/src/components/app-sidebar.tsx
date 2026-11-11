@@ -7,12 +7,10 @@ import {
   BookOpenTextIcon,
   GitBranchIcon,
   Layers3Icon,
-  PlusIcon,
   Settings2Icon,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import {
   Sidebar,
   SidebarContent,
@@ -51,33 +49,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              size="lg"
-              tooltip="Propose context"
-              render={<Link href="/proposals" />}
-              className="bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/85 active:text-primary-foreground"
-            >
-              <PlusIcon aria-hidden="true" />
-              <span className="font-medium">Propose context</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={items} />
       </SidebarContent>
-      <SidebarFooter>
-        <NavSecondary
-          items={[{ title: "Settings", url: "/settings", icon: <Settings2Icon />, isActive: pathname.startsWith("/settings") }]}
-        />
-        <SidebarMenu>
+      <SidebarFooter className="flex-row items-center gap-1.5">
+        <SidebarMenu className="w-9 shrink-0 p-0">
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" className="cursor-default">
+            <SidebarMenuButton
+              tooltip="Settings"
+              aria-label="Settings"
+              isActive={pathname.startsWith("/settings")}
+              render={<Link href="/settings" />}
+              className="justify-center px-0 hover:bg-slate-200/70 hover:text-foreground data-active:bg-white data-active:text-violet-900 data-active:shadow-sm data-active:ring-1 data-active:ring-violet-200 data-active:hover:bg-white dark:hover:bg-slate-800 dark:data-active:bg-slate-900 dark:data-active:text-violet-200 dark:data-active:ring-violet-900"
+            >
+              <Settings2Icon />
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <SidebarMenu className="min-w-0 flex-[1.5] gap-0">
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" className="h-10 cursor-default gap-1.5 px-1.5 hover:bg-transparent active:bg-transparent">
               <span className="flex size-8 items-center justify-center rounded-full bg-sidebar-accent text-xs font-medium text-sidebar-accent-foreground">C</span>
-              <span className="grid flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-medium">ContextOps Demo</span>
-                <span className="truncate text-xs text-sidebar-foreground/60">Local workspace</span>
+              <span className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="truncate text-xs font-medium">ContextOps Demo</span>
+                <span className="truncate text-[10px] text-sidebar-foreground/60">Local workspace</span>
               </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
