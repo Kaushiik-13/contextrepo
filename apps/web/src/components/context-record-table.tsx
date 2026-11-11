@@ -85,14 +85,18 @@ function TypeBadge({ type }: { type: ContextType }) {
 function DetailGroup({
   title,
   children,
+  className = "",
 }: {
   title: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="space-y-1.5">
-      <h3 className="text-xs font-medium text-muted-foreground">{title}</h3>
-      <div className="text-sm leading-6">{children}</div>
+    <section className={`space-y-2 ${className}`}>
+      <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
+        {title}
+      </h3>
+      <div className="text-[15px] leading-7 text-stone-800">{children}</div>
     </section>
   );
 }
@@ -179,8 +183,8 @@ export function ContextRecordTable({ records }: { records: ContextRecord[] }) {
         }}
       >
         {selected && (
-          <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
-            <SheetHeader className="border-b pb-4">
+          <SheetContent className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
+            <SheetHeader className="shrink-0 gap-2 border-b border-stone-200 bg-gradient-to-r from-white to-stone-50 px-5 pb-5 pt-6">
               <div className="flex items-center justify-between gap-3 pr-8">
                 <TypeBadge type={selected.type} />
                 <Badge
@@ -191,21 +195,25 @@ export function ContextRecordTable({ records }: { records: ContextRecord[] }) {
                   Approved
                 </Badge>
               </div>
-              <SheetTitle className="pt-2 text-left text-xl">
+              <SheetTitle className="pt-1 pr-8 text-left text-2xl leading-tight tracking-tight">
                 {selected.title}
               </SheetTitle>
               <SheetDescription className="text-left">
-                Decision and discussion trail
+                Approved context · decision and reasoning
               </SheetDescription>
             </SheetHeader>
-            <div className="space-y-5 px-4 pb-6">
-              <DetailGroup title="Question">
+            <div className="context-detail-scroll min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
+              <DetailGroup
+                title="Question"
+                className="rounded-xl border border-stone-200 bg-white p-4"
+              >
                 <p>{selected.question}</p>
               </DetailGroup>
-              <DetailGroup title="Outcome">
-                <p className="font-medium text-foreground">
-                  {selected.summary}
-                </p>
+              <DetailGroup
+                title="Outcome"
+                className="rounded-xl border border-violet-200/80 bg-violet-50/60 p-4"
+              >
+                <p className="font-medium text-stone-950">{selected.summary}</p>
               </DetailGroup>
               <DetailGroup title="Why the team chose it">
                 <p>{selected.rationale}</p>
@@ -228,31 +236,35 @@ export function ContextRecordTable({ records }: { records: ContextRecord[] }) {
                   </ul>
                 </DetailGroup>
               )}
-              <div className="rounded-lg bg-muted/60 p-4">
-                <p className="text-xs font-medium text-foreground">
-                  Discussion trail
-                </p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {selected.discussionSummary}
-                </p>
-              </div>
-              <DetailGroup title="Source notes">
-                <ul className="space-y-2">
-                  {selected.sourceReferences.map((source) => (
-                    <li
-                      key={source}
-                      className="flex items-start gap-2 text-muted-foreground"
-                    >
-                      <ArrowUpRight
-                        className="mt-1 size-3.5 shrink-0"
-                        aria-hidden="true"
-                      />
-                      {source}
-                    </li>
-                  ))}
-                </ul>
-              </DetailGroup>
-              <p className="border-t pt-4 text-xs text-muted-foreground">
+              {selected.discussionSummary && (
+                <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
+                    Discussion trail
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-stone-700">
+                    {selected.discussionSummary}
+                  </p>
+                </div>
+              )}
+              {selected.sourceReferences.length > 0 && (
+                <DetailGroup title="Source notes">
+                  <ul className="space-y-2">
+                    {selected.sourceReferences.map((source) => (
+                      <li
+                        key={source}
+                        className="flex items-start gap-2 text-muted-foreground"
+                      >
+                        <ArrowUpRight
+                          className="mt-1 size-3.5 shrink-0"
+                          aria-hidden="true"
+                        />
+                        {source}
+                      </li>
+                    ))}
+                  </ul>
+                </DetailGroup>
+              )}
+              <p className="border-t border-stone-200 pt-4 text-xs text-stone-500">
                 Added by {selected.owner} · {formatDate(selected.updatedAt)}
               </p>
             </div>

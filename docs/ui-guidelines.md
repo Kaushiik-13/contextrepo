@@ -19,6 +19,7 @@ The GitHub setup screens are the visual reference for the product. Keep the appl
 - Keep the selected repository visible in the workspace navigation. Put account and settings actions in the bottom area, aligned on one row where space allows.
 - Make important primary actions dark and unmistakable. Secondary actions use white backgrounds and stone borders.
 - Show loading, empty, error, connected, and disconnected states in plain language. Include a next action for recoverable errors.
+- For context detail side drawers, keep the title and status fixed while only the detail content scrolls. Separate the question, outcome, and reasoning with clear labels; highlight the outcome once and keep optional discussion/source sections visually quiet. Contain scroll inside the drawer and use a subtle narrow scrollbar so the page behind it does not move.
 
 ## Accessibility and responsive behavior
 

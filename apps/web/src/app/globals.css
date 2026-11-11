@@ -4,6 +4,34 @@
 
 @custom-variant dark (&:is(.dark *));
 
+.context-detail-scroll {
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #c4b5fd transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.context-detail-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.context-detail-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.context-detail-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: #c4b5fd;
+  background-clip: padding-box;
+}
+
+.context-detail-scroll::-webkit-scrollbar-thumb:hover {
+  background: #8b5cf6;
+  background-clip: padding-box;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
