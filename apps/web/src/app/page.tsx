@@ -1,16 +1,13 @@
 import {
   ArrowDownUp,
   ArrowUpRight,
-  BookOpenText,
   Check,
-  ChevronDown,
   CircleHelp,
   Clock3,
   Database,
   FileCheck2,
   FlaskConical,
   GitBranch,
-  Layers3,
   Search,
   ShieldCheck,
   Sparkles,
@@ -22,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ContextRecord, ContextType } from "@/lib/context";
+import { WorkspaceShell } from "@/components/workspace-shell";
 
 const API_URL = process.env.CONTEXTOPS_API_URL ?? "http://localhost:4000/api";
 
@@ -116,48 +114,6 @@ function TypeBadge({ type }: { type: ContextType }) {
       <Icon className="size-3.5" aria-hidden="true" />
       {meta.label}
     </Badge>
-  );
-}
-
-function WorkspaceSidebar() {
-  return (
-    <aside className="hidden w-[230px] shrink-0 flex-col border-r border-stone-200 bg-stone-50/80 px-3 py-5 lg:flex">
-      <a href="/" aria-label="ContextOps home" className="mb-8 flex items-center gap-2.5 px-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-stone-900 text-white">
-          <Layers3 className="size-4" aria-hidden="true" />
-        </span>
-        <span className="text-sm font-semibold tracking-tight text-stone-900">ContextOps</span>
-      </a>
-
-      <div className="mb-7 rounded-lg border border-stone-200 bg-white px-3 py-2.5">
-        <p className="text-[10px] font-medium uppercase tracking-wider text-stone-400">Workspace</p>
-        <div className="mt-2 flex items-center gap-2">
-          <span className="flex size-7 items-center justify-center rounded-md bg-stone-100 text-xs font-semibold text-stone-700">C</span>
-          <span className="min-w-0 flex-1 truncate text-xs font-medium text-stone-800">ContextOps Demo</span>
-          <ChevronDown className="size-3.5 text-stone-400" aria-hidden="true" />
-        </div>
-      </div>
-
-      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">Project</p>
-      <nav aria-label="Project navigation" className="space-y-1">
-        <a href="/" aria-current="page" className="flex items-center gap-2.5 rounded-md bg-stone-200/70 px-2.5 py-2 text-xs font-medium text-stone-900">
-          <BookOpenText className="size-4" aria-hidden="true" /> Context library
-        </a>
-        <span aria-disabled="true" className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-stone-400">
-          <GitBranch className="size-4" aria-hidden="true" /> Proposals <span className="ml-auto text-[10px]">Soon</span>
-        </span>
-        <span aria-disabled="true" className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-stone-400">
-          <Clock3 className="size-4" aria-hidden="true" /> Activity <span className="ml-auto text-[10px]">Soon</span>
-        </span>
-      </nav>
-
-      <div className="mt-auto rounded-lg border border-stone-200 bg-white p-3">
-        <p className="flex items-center gap-2 text-xs font-medium text-stone-800">
-          <Sparkles className="size-3.5 text-violet-600" aria-hidden="true" /> Context that travels
-        </p>
-        <p className="mt-1.5 text-[11px] leading-5 text-stone-500">Keep the team’s reasoning available to every AI assistant.</p>
-      </div>
-    </aside>
   );
 }
 
@@ -279,20 +235,7 @@ async function ContextWorkspace({ searchParams }: { searchParams: SearchParams }
   const selected = result.items.find((item) => item.id === params.selected) ?? result.items[0];
 
   return (
-    <div className="flex min-h-screen bg-stone-50 text-stone-900">
-      <WorkspaceSidebar />
-      <div className="min-w-0 flex-1">
-        <header className="flex h-14 items-center justify-between border-b border-stone-200 bg-white px-4 md:px-7">
-          <div className="flex items-center gap-2 text-xs text-stone-500">
-            <span className="font-medium text-stone-700">ContextOps Demo</span><span className="text-stone-300">/</span><span>Context library</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden rounded-md border border-stone-200 bg-stone-50 px-2 py-1 text-[10px] text-stone-500 sm:inline">LOCAL DEMO</span>
-            <span className="flex size-7 items-center justify-center rounded-full bg-stone-900 text-[10px] font-semibold text-white" aria-label="ContextOps demo user">C</span>
-          </div>
-        </header>
-
-        <main className="mx-auto max-w-[1600px] px-4 py-6 md:px-7 md:py-8">
+    <WorkspaceShell activePage="library">
           <div className="flex flex-col justify-between gap-4 border-b border-stone-200 pb-5 sm:flex-row sm:items-end">
             <div>
               <p className="text-[11px] font-medium text-violet-700">TEAM KNOWLEDGE</p>
@@ -340,7 +283,7 @@ async function ContextWorkspace({ searchParams }: { searchParams: SearchParams }
               <ContextTable items={result.items} selectedId={selected?.id} search={search} type={activeType} />
             </section>
 
-            <aside aria-label="Selected context details" className="min-w-0 2xl:sticky 2xl:top-5">
+            <aside aria-label="Selected context details" className="min-w-0 2xl:sticky 2xl:top-[4.5rem] 2xl:max-h-[calc(100dvh-5.5rem)] 2xl:overflow-y-auto 2xl:overscroll-contain">
               {selected ? <ContextDetails record={selected} /> : (
                 <Card className="rounded-lg border-stone-200 py-0 shadow-none">
                   <CardContent className="px-5 py-8 text-center text-xs text-stone-500">Select a context record to see the decision and its discussion trail.</CardContent>
@@ -349,9 +292,7 @@ async function ContextWorkspace({ searchParams }: { searchParams: SearchParams }
               <p className="mt-2 px-1 text-[10px] leading-4 text-stone-400">Demo records only. The database example is illustrative, not a finalized project decision.</p>
             </aside>
           </div>
-        </main>
-      </div>
-    </div>
+    </WorkspaceShell>
   );
 }
 
