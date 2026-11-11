@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, FilePlus2, GitBranch, Save, X } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  FilePlus2,
+  GitBranch,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -122,8 +130,10 @@ export function ProposalDrafts() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [reviewBusy, setReviewBusy] = useState(false);
-  const [conflicts, setConflicts] = useState<Array<{path:string;title:string;summary:string}>>([]);
+  const [reviewBusy, setReviewBusy] = useState<string | null>(null);
+  const [conflicts, setConflicts] = useState<
+    Array<{ path: string; title: string; summary: string }>
+  >([]);
 
   useEffect(() => {
     let active = true;
@@ -173,7 +183,14 @@ export function ProposalDrafts() {
     setError("");
     setNotice("");
     setConflicts([]);
-    if (draft.status === "draft") fetch(`${API_URL}/proposals/${draft.id}/conflicts`, { credentials:"include",cache:"no-store" }).then(r=>r.ok?r.json():null).then(result=>setConflicts(result?.matches??[])).catch(()=>setConflicts([]));
+    if (draft.status === "draft")
+      fetch(`${API_URL}/proposals/${draft.id}/conflicts`, {
+        credentials: "include",
+        cache: "no-store",
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((result) => setConflicts(result?.matches ?? []))
+        .catch(() => setConflicts([]));
   }
 
   function updateField<K extends keyof DraftForm>(key: K, value: DraftForm[K]) {
@@ -251,19 +268,80 @@ export function ProposalDrafts() {
     }
   }
 
-  async function reviewDraft(decision: "approve" | "reject") {
-    if (!draftId) return;
-    setReviewBusy(true); setError(""); setNotice("");
+  async function reviewDraft(
+    id: string,
+    title: string,
+    decision: "approve" | "reject",
+  ) {
+    if (reviewBusy) return;
+    if (
+      decision === "reject" &&
+      !window.confirm(
+        `Reject “${title}”? It will remain in the proposal history and will not be published.`,
+      )
+    )
+      return;
+    if (decision === "approve") {
+      try {
+        const conflictResponse = await fetch(
+          `${API_URL}/proposals/${id}/conflicts`,
+          { credentials: "include", cache: "no-store" },
+        );
+        if (conflictResponse.ok) {
+          const conflictResult = (await conflictResponse.json()) as {
+            matches: Array<{ title: string; summary: string }>;
+          };
+          if (
+            conflictResult.matches?.length &&
+            !window.confirm(
+              `This may conflict with approved context:\n\n${conflictResult.matches.map((item) => `${item.title}: ${item.summary}`).join("\n\n")}\n\nApprove and publish anyway?`,
+            )
+          )
+            return;
+        }
+      } catch {
+        /* the approval API still validates the proposal and GitHub write */
+      }
+    }
+    setReviewBusy(id);
+    setError("");
+    setNotice("");
     try {
-      const response = await fetch(`${API_URL}/proposals/${draftId}/${decision}`, { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
-      if (response.status === 401) { router.replace("/login"); return; }
+      const response = await fetch(`${API_URL}/proposals/${id}/${decision}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (response.status === 401) {
+        router.replace("/login");
+        return;
+      }
       if (!response.ok) throw new Error(await readError(response));
-      setForm(null); setDraftId(null);
-      setNotice(decision === "approve" ? "Approved and published to GitHub." : "Proposal rejected.");
-      const refreshed = await fetch(`${API_URL}/proposals?status=all`, { credentials: "include", cache: "no-store" });
-      if (refreshed.ok) { const result = await refreshed.json() as { items: Draft[] }; setDrafts(result.items ?? []); }
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Could not update this proposal."); }
-    finally { setReviewBusy(false); }
+      setForm(null);
+      setDraftId(null);
+      setNotice(
+        decision === "approve"
+          ? "Approved and published to GitHub."
+          : "Proposal rejected.",
+      );
+      const refreshed = await fetch(`${API_URL}/proposals?status=all`, {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (refreshed.ok) {
+        const result = (await refreshed.json()) as { items: Draft[] };
+        setDrafts(result.items ?? []);
+      }
+    } catch (reason) {
+      setError(
+        reason instanceof Error
+          ? reason.message
+          : "Could not update this proposal.",
+      );
+    } finally {
+      setReviewBusy(null);
+    }
   }
 
   return (
@@ -271,9 +349,7 @@ export function ProposalDrafts() {
       <div className="flex flex-col justify-between gap-3 border-b border-stone-100 pb-5 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-stone-950">
-              Proposals
-            </h2>
+            <h2 className="text-sm font-semibold text-stone-950">Proposals</h2>
             <Badge variant="secondary" className="font-normal">
               {drafts.filter((item) => item.status === "draft").length} drafts
             </Badge>
@@ -309,11 +385,28 @@ export function ProposalDrafts() {
           <p>{error}</p>
         </div>
       )}
-      {conflicts.length > 0 && <div role="status" className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-950"><p className="font-medium">This may conflict with approved context. Please review before approval.</p><ul className="mt-2 list-disc pl-5 text-xs">{conflicts.map((item)=><li key={item.path}><strong>{item.title}</strong>: {item.summary}</li>)}</ul></div>}
+      {conflicts.length > 0 && (
+        <div
+          role="status"
+          className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-sm text-amber-950"
+        >
+          <p className="font-medium">
+            This may conflict with approved context. Please review before
+            approval.
+          </p>
+          <ul className="mt-2 list-disc pl-5 text-xs">
+            {conflicts.map((item) => (
+              <li key={item.path}>
+                <strong>{item.title}</strong>: {item.summary}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(220px,0.7fr)_minmax(0,1.8fr)]">
         <aside aria-label="Saved drafts" className="min-w-0">
-            <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
+          <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-stone-500">
             Proposals
           </h3>
           {loading ? (
@@ -340,7 +433,13 @@ export function ProposalDrafts() {
                 <li key={draft.id}>
                   <button
                     type="button"
-                    onClick={() => draft.status === "draft" ? editDraft(draft) : (setConflicts([]),setDraftId(draft.id), setForm(formFromDraft(draft)))}
+                    onClick={() =>
+                      draft.status === "draft"
+                        ? editDraft(draft)
+                        : (setConflicts([]),
+                          setDraftId(draft.id),
+                          setForm(formFromDraft(draft)))
+                    }
                     aria-current={draftId === draft.id ? "true" : undefined}
                     className={`w-full rounded-lg px-3 py-3 text-left transition-colors ${draftId === draft.id ? "bg-violet-50 text-violet-950" : "text-stone-800 hover:bg-stone-50"}`}
                   >
@@ -354,9 +453,55 @@ export function ProposalDrafts() {
                     </span>
                     <span className="mt-1 flex items-center gap-1.5 text-xs text-stone-500">
                       <GitBranch className="size-3" aria-hidden="true" />
-                      {TYPE_LABELS[draft.type]} · {draft.status === "approved" ? "Approved" : draft.status === "rejected" ? "Rejected" : "Draft"}
+                      {TYPE_LABELS[draft.type]} ·{" "}
+                      {draft.status === "approved"
+                        ? "Approved"
+                        : draft.status === "rejected"
+                          ? "Rejected"
+                          : "Draft"}
                     </span>
                   </button>
+                  {draft.status === "draft" && (
+                    <div
+                      className="flex flex-wrap gap-1.5 px-3 pb-3"
+                      aria-label={`Actions for ${draft.title}`}
+                    >
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="h-7 rounded-md px-2 text-xs"
+                        onClick={() => editDraft(draft)}
+                      >
+                        <Pencil className="mr-1 size-3" />
+                        Edit
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="h-7 rounded-md bg-emerald-700 px-2 text-xs text-white hover:bg-emerald-800"
+                        disabled={reviewBusy !== null}
+                        onClick={() =>
+                          reviewDraft(draft.id, draft.title, "approve")
+                        }
+                      >
+                        <Check className="mr-1 size-3" />
+                        {reviewBusy === draft.id ? "Working…" : "Approve"}
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 rounded-md px-2 text-xs text-rose-700 hover:bg-rose-50 hover:text-rose-800"
+                        disabled={reviewBusy !== null}
+                        onClick={() =>
+                          reviewDraft(draft.id, draft.title, "reject")
+                        }
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
@@ -379,11 +524,24 @@ export function ProposalDrafts() {
             </div>
           ) : (
             <form onSubmit={saveDraft} className="space-y-4">
-              {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" && <div className="rounded-lg bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">This proposal is already {drafts.find((item) => item.id === draftId)?.status} and can no longer be changed.</div>}
+              {draftId &&
+                drafts.find((item) => item.id === draftId)?.status !==
+                  "draft" && (
+                  <div className="rounded-lg bg-stone-50 px-3 py-2 text-xs font-medium text-stone-600">
+                    This proposal is already{" "}
+                    {drafts.find((item) => item.id === draftId)?.status} and can
+                    no longer be changed.
+                  </div>
+                )}
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <h3 className="text-sm font-semibold text-stone-950">
-                    {draftId ? (drafts.find((item) => item.id === draftId)?.status === "draft" ? "Review or edit draft" : "Reviewed proposal") : "New draft"}
+                    {draftId
+                      ? drafts.find((item) => item.id === draftId)?.status ===
+                        "draft"
+                        ? "Review or edit draft"
+                        : "Reviewed proposal"
+                      : "New draft"}
                   </h3>
                   <p className="mt-1 text-xs leading-5 text-stone-500">
                     Capture the outcome and enough reasoning for a teammate to
@@ -405,144 +563,201 @@ export function ProposalDrafts() {
                 </Button>
               </div>
 
-              <fieldset disabled={Boolean(draftId && drafts.find((item) => item.id === draftId)?.status !== "draft")} className="space-y-4">
-              <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_190px]">
-                <Field label="Title" required>
-                  <Input
-                    value={form.title}
-                    onChange={(event) =>
-                      updateField("title", event.target.value)
-                    }
-                    maxLength={180}
-                    placeholder="e.g. Choose a database for the application"
-                    required
+              <fieldset
+                disabled={Boolean(
+                  draftId &&
+                  drafts.find((item) => item.id === draftId)?.status !==
+                    "draft",
+                )}
+                className="space-y-4"
+              >
+                <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_190px]">
+                  <Field label="Title" required>
+                    <Input
+                      value={form.title}
+                      onChange={(event) =>
+                        updateField("title", event.target.value)
+                      }
+                      maxLength={180}
+                      placeholder="e.g. Choose a database for the application"
+                      required
+                    />
+                  </Field>
+                  <Field label="Context type">
+                    <select
+                      value={form.type}
+                      onChange={(event) =>
+                        updateField("type", event.target.value as ContextType)
+                      }
+                      className="h-9 w-full rounded-lg border border-input bg-white px-3 text-sm text-stone-800 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                    >
+                      {CONTEXT_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {TYPE_LABELS[type]}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                </div>
+
+                <Field label="Question or problem">
+                  <TextArea
+                    value={form.question}
+                    onChange={(value) => updateField("question", value)}
+                    placeholder="What did the team need to decide or understand?"
+                    rows={2}
                   />
                 </Field>
-                <Field label="Context type">
-                  <select
-                    value={form.type}
-                    onChange={(event) =>
-                      updateField("type", event.target.value as ContextType)
-                    }
-                    className="h-9 w-full rounded-lg border border-input bg-white px-3 text-sm text-stone-800 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                <Field label="Outcome or summary">
+                  <TextArea
+                    value={form.summary}
+                    onChange={(value) => updateField("summary", value)}
+                    placeholder="What is the proposed answer or current conclusion?"
+                    rows={2}
+                  />
+                </Field>
+                <Field label="Why?">
+                  <TextArea
+                    value={form.rationale}
+                    onChange={(value) => updateField("rationale", value)}
+                    placeholder="What reasons led to this outcome?"
+                    rows={3}
+                  />
+                </Field>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Constraints" hint="One item per line">
+                    <TextArea
+                      value={form.constraints}
+                      onChange={(value) => updateField("constraints", value)}
+                      placeholder="Limits or requirements to keep in mind"
+                      rows={3}
+                    />
+                  </Field>
+                  <Field
+                    label="Alternatives considered"
+                    hint="One item per line"
                   >
-                    {CONTEXT_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {TYPE_LABELS[type]}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              </div>
+                    <TextArea
+                      value={form.alternatives}
+                      onChange={(value) => updateField("alternatives", value)}
+                      placeholder="Other options and tradeoffs"
+                      rows={3}
+                    />
+                  </Field>
+                </div>
 
-              <Field label="Question or problem">
-                <TextArea
-                  value={form.question}
-                  onChange={(value) => updateField("question", value)}
-                  placeholder="What did the team need to decide or understand?"
-                  rows={2}
-                />
-              </Field>
-              <Field label="Outcome or summary">
-                <TextArea
-                  value={form.summary}
-                  onChange={(value) => updateField("summary", value)}
-                  placeholder="What is the proposed answer or current conclusion?"
-                  rows={2}
-                />
-              </Field>
-              <Field label="Why?">
-                <TextArea
-                  value={form.rationale}
-                  onChange={(value) => updateField("rationale", value)}
-                  placeholder="What reasons led to this outcome?"
-                  rows={3}
-                />
-              </Field>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Constraints" hint="One item per line">
+                <Field label="Discussion notes">
                   <TextArea
-                    value={form.constraints}
-                    onChange={(value) => updateField("constraints", value)}
-                    placeholder="Limits or requirements to keep in mind"
+                    value={form.discussionSummary}
+                    onChange={(value) =>
+                      updateField("discussionSummary", value)
+                    }
+                    placeholder="Useful context from the conversation"
                     rows={3}
                   />
                 </Field>
-                <Field label="Alternatives considered" hint="One item per line">
-                  <TextArea
-                    value={form.alternatives}
-                    onChange={(value) => updateField("alternatives", value)}
-                    placeholder="Other options and tradeoffs"
-                    rows={3}
-                  />
-                </Field>
-              </div>
 
-              <Field label="Discussion notes">
-                <TextArea
-                  value={form.discussionSummary}
-                  onChange={(value) => updateField("discussionSummary", value)}
-                  placeholder="Useful context from the conversation"
-                  rows={3}
-                />
-              </Field>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Tags" hint="One item per line">
-                  <TextArea
-                    value={form.tags}
-                    onChange={(value) => updateField("tags", value)}
-                    placeholder="database\narchitecture"
-                    rows={2}
-                  />
-                </Field>
-                <Field label="Sources or references" hint="One item per line">
-                  <TextArea
-                    value={form.sourceReferences}
-                    onChange={(value) => updateField("sourceReferences", value)}
-                    placeholder="Links, files, or documents"
-                    rows={2}
-                  />
-                </Field>
-              </div>
-
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Tags" hint="One item per line">
+                    <TextArea
+                      value={form.tags}
+                      onChange={(value) => updateField("tags", value)}
+                      placeholder="database\narchitecture"
+                      rows={2}
+                    />
+                  </Field>
+                  <Field label="Sources or references" hint="One item per line">
+                    <TextArea
+                      value={form.sourceReferences}
+                      onChange={(value) =>
+                        updateField("sourceReferences", value)
+                      }
+                      placeholder="Links, files, or documents"
+                      rows={2}
+                    />
+                  </Field>
+                </div>
               </fieldset>
               <div className="flex flex-col-reverse gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-xs text-emerald-700">
-                  {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" ? `Reviewed · ${drafts.find((item) => item.id === draftId)?.publishedPath ?? "not published"}` : "Draft only · not in the approved context library"}
+                  {draftId &&
+                  drafts.find((item) => item.id === draftId)?.status !== "draft"
+                    ? `Reviewed · ${drafts.find((item) => item.id === draftId)?.publishedPath ?? "not published"}`
+                    : "Draft only · not in the approved context library"}
                 </div>
                 <div className="flex flex-wrap justify-end gap-2">
-                  {draftId && drafts.find((item) => item.id === draftId)?.status === "draft" && <>
-                    <Button type="button" variant="outline" disabled={reviewBusy} onClick={() => reviewDraft("reject")}>Reject</Button>
-                    <Button type="button" disabled={reviewBusy} onClick={() => reviewDraft("approve")} className="bg-emerald-700 text-white hover:bg-emerald-800">{reviewBusy ? "Processing…" : "Approve & publish"}</Button>
-                  </>}
-                  {draftId && drafts.find((item) => item.id === draftId)?.status !== "draft" && <Button type="button" variant="outline" onClick={() => {setForm(null);setDraftId(null);}}>Close</Button>}
-                  {(!draftId || drafts.find((item) => item.id === draftId)?.status === "draft") && <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setForm(null);
-                      setDraftId(null);
-                      setNotice("");
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={saving || !form.title.trim()}
-                    className="gap-2 bg-stone-950 text-white hover:bg-stone-800"
-                  >
-                    <Save className="size-4" aria-hidden="true" />
-                    {saving
-                      ? "Saving…"
-                      : draftId
-                        ? "Save changes"
-                        : "Save draft"}
-                  </Button>
-                  </>}
+                  {draftId &&
+                    drafts.find((item) => item.id === draftId)?.status ===
+                      "draft" && (
+                      <>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          disabled={reviewBusy !== null}
+                          onClick={() =>
+                            reviewDraft(draftId, form.title, "reject")
+                          }
+                        >
+                          Reject
+                        </Button>
+                        <Button
+                          type="button"
+                          disabled={reviewBusy !== null}
+                          onClick={() =>
+                            reviewDraft(draftId, form.title, "approve")
+                          }
+                          className="bg-emerald-700 text-white hover:bg-emerald-800"
+                        >
+                          {reviewBusy === draftId
+                            ? "Processing…"
+                            : "Approve & publish"}
+                        </Button>
+                      </>
+                    )}
+                  {draftId &&
+                    drafts.find((item) => item.id === draftId)?.status !==
+                      "draft" && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setForm(null);
+                          setDraftId(null);
+                        }}
+                      >
+                        Close
+                      </Button>
+                    )}
+                  {(!draftId ||
+                    drafts.find((item) => item.id === draftId)?.status ===
+                      "draft") && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setForm(null);
+                          setDraftId(null);
+                          setNotice("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={saving || !form.title.trim()}
+                        className="gap-2 bg-stone-950 text-white hover:bg-stone-800"
+                      >
+                        <Save className="size-4" aria-hidden="true" />
+                        {saving
+                          ? "Saving…"
+                          : draftId
+                            ? "Save changes"
+                            : "Save draft"}
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </form>
