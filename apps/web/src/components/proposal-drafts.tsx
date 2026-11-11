@@ -203,19 +203,36 @@ export function ProposalDrafts() {
       if (!response.ok) throw new Error(await readError(response));
       const result = (await response.json()) as { proposal: Draft };
       const savedDraft = result.proposal;
-      setDrafts((current) =>
-        [
-          savedDraft,
-          ...current.filter((item) => item.id !== savedDraft.id),
-        ].sort(
-          (left, right) =>
-            new Date(right.updatedAt).getTime() -
-            new Date(left.updatedAt).getTime(),
-        ),
-      );
-      setDraftId(savedDraft.id);
-      setForm(formFromDraft(savedDraft));
-      setNotice(isEditing ? "Draft updated." : "Draft saved.");
+      setDrafts((current) => [
+        savedDraft,
+        ...current.filter((item) => item.id !== savedDraft.id),
+      ]);
+      setDraftId(null);
+      setForm(null);
+      setNotice(isEditing ? "Changes saved." : "Draft saved.");
+
+      try {
+        const listResponse = await fetch(`${API_URL}/proposals`, {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (listResponse.status === 401) {
+          router.replace("/login");
+          return;
+        }
+        if (listResponse.ok) {
+          const listResult = (await listResponse.json()) as { items: Draft[] };
+          setDrafts(listResult.items ?? []);
+        } else {
+          setNotice(
+            "Saved. Refresh the page if the draft list looks out of date.",
+          );
+        }
+      } catch {
+        setNotice(
+          "Saved. Refresh the page if the draft list looks out of date.",
+        );
+      }
     } catch (reason) {
       setError(
         reason instanceof Error
@@ -251,6 +268,15 @@ export function ProposalDrafts() {
           New draft
         </Button>
       </div>
+
+      {notice && (
+        <p
+          aria-live="polite"
+          className="mt-3 text-xs font-medium text-emerald-700"
+        >
+          {notice}
+        </p>
+      )}
 
       {error && (
         <div
@@ -457,8 +483,8 @@ export function ProposalDrafts() {
               </div>
 
               <div className="flex flex-col-reverse gap-3 border-t border-stone-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                <div aria-live="polite" className="text-xs text-emerald-700">
-                  {notice || "Draft only · not in the approved context library"}
+                <div className="text-xs text-emerald-700">
+                  Draft only · not in the approved context library
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button

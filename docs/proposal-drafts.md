@@ -18,8 +18,8 @@ Do not rerun migrations `001` or `002`; this step only adds the `context_proposa
 1. Open **Proposals** in ContextOps and choose **New draft**.
 2. Enter a title and choose one of the seven context types.
 3. Add the question, outcome, and reasoning. Constraints, alternatives, tags, and sources can be entered one item per line.
-4. Choose **Save draft**. The draft appears in the left list.
-5. Select it later to edit, then choose **Save changes**.
+4. Choose **Save draft**. The editor closes and the refreshed draft list shows the saved item.
+5. Select it later to edit. Choosing **Save changes** closes the editor and refreshes the list again.
 
 The title is required so the draft is easy to find. Other fields can be filled in gradually.
 
