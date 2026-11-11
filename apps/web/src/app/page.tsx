@@ -1,5 +1,5 @@
 import {
-  AlertCircle,
+  ArrowDownUp,
   ArrowUpRight,
   BookOpenText,
   Check,
@@ -19,7 +19,7 @@ import {
 import { Suspense } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import type { ContextRecord, ContextType } from "@/lib/context";
 
@@ -32,37 +32,37 @@ const TYPE_META: Record<
   decision: {
     label: "Decision",
     icon: Database,
-    color: "text-indigo-700 bg-indigo-50 border-indigo-100",
+    color: "border-violet-200 bg-violet-50 text-violet-700",
   },
   requirement: {
     label: "Requirement",
     icon: FileCheck2,
-    color: "text-blue-700 bg-blue-50 border-blue-100",
+    color: "border-sky-200 bg-sky-50 text-sky-700",
   },
   constraint: {
     label: "Constraint",
     icon: ShieldCheck,
-    color: "text-amber-700 bg-amber-50 border-amber-100",
+    color: "border-amber-200 bg-amber-50 text-amber-800",
   },
   research: {
     label: "Research",
     icon: FlaskConical,
-    color: "text-violet-700 bg-violet-50 border-violet-100",
+    color: "border-indigo-200 bg-indigo-50 text-indigo-700",
   },
   "rejected-approach": {
     label: "Rejected approach",
     icon: XCircle,
-    color: "text-rose-700 bg-rose-50 border-rose-100",
+    color: "border-rose-200 bg-rose-50 text-rose-700",
   },
   "open-question": {
     label: "Open question",
     icon: CircleHelp,
-    color: "text-orange-700 bg-orange-50 border-orange-100",
+    color: "border-orange-200 bg-orange-50 text-orange-800",
   },
   "project-state": {
     label: "Project state",
     icon: Clock3,
-    color: "text-emerald-700 bg-emerald-50 border-emerald-100",
+    color: "border-emerald-200 bg-emerald-50 text-emerald-700",
   },
 };
 
@@ -112,243 +112,163 @@ function TypeBadge({ type }: { type: ContextType }) {
   const Icon = meta.icon;
 
   return (
-    <Badge
-      variant="outline"
-      className={`gap-1.5 rounded-full px-2.5 py-1 font-medium ${meta.color}`}
-    >
+    <Badge variant="outline" className={`gap-1.5 rounded-md px-2 py-1 font-medium ${meta.color}`}>
       <Icon className="size-3.5" aria-hidden="true" />
       {meta.label}
     </Badge>
   );
 }
 
-function Sidebar() {
+function WorkspaceSidebar() {
   return (
-    <aside className="hidden w-[248px] shrink-0 border-r border-slate-200/80 bg-white px-4 py-5 lg:flex lg:flex-col">
-      <a className="mb-9 flex items-center gap-3 px-2" href="/" aria-label="ContextOps home">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-slate-950 text-white shadow-sm">
-          <Layers3 className="size-5" aria-hidden="true" />
+    <aside className="hidden w-[230px] shrink-0 flex-col border-r border-stone-200 bg-stone-50/80 px-3 py-5 lg:flex">
+      <a href="/" aria-label="ContextOps home" className="mb-8 flex items-center gap-2.5 px-2">
+        <span className="flex size-8 items-center justify-center rounded-lg bg-stone-900 text-white">
+          <Layers3 className="size-4" aria-hidden="true" />
         </span>
-        <span>
-          <span className="block text-[15px] font-semibold tracking-tight text-slate-900">
-            ContextOps
-          </span>
-          <span className="block text-[11px] text-slate-500">Team context</span>
-        </span>
+        <span className="text-sm font-semibold tracking-tight text-stone-900">ContextOps</span>
       </a>
 
-      <div className="mb-7 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
-        <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-          Workspace
-        </p>
-        <div className="mt-2 flex w-full items-center gap-2 rounded-lg px-1 py-1 text-left">
-          <span className="flex size-7 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-700">
-            C
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-xs font-medium text-slate-800">
-              ContextOps demo
-            </span>
-            <span className="block text-[10px] text-slate-500">Sample project</span>
-          </span>
-          <ChevronDown className="size-3.5 text-slate-400" aria-hidden="true" />
+      <div className="mb-7 rounded-lg border border-stone-200 bg-white px-3 py-2.5">
+        <p className="text-[10px] font-medium uppercase tracking-wider text-stone-400">Workspace</p>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="flex size-7 items-center justify-center rounded-md bg-stone-100 text-xs font-semibold text-stone-700">C</span>
+          <span className="min-w-0 flex-1 truncate text-xs font-medium text-stone-800">ContextOps Demo</span>
+          <ChevronDown className="size-3.5 text-stone-400" aria-hidden="true" />
         </div>
       </div>
 
-      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-        Project
-      </p>
-      <nav aria-label="Main navigation" className="space-y-1">
-        <a
-          href="/"
-          aria-current="page"
-          className="flex items-center gap-3 rounded-lg bg-indigo-50 px-3 py-2.5 text-sm font-medium text-indigo-700"
-        >
-          <BookOpenText className="size-4" aria-hidden="true" />
-          Shared context
-          <span className="ml-auto size-1.5 rounded-full bg-indigo-600" />
+      <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">Project</p>
+      <nav aria-label="Project navigation" className="space-y-1">
+        <a href="/" aria-current="page" className="flex items-center gap-2.5 rounded-md bg-stone-200/70 px-2.5 py-2 text-xs font-medium text-stone-900">
+          <BookOpenText className="size-4" aria-hidden="true" /> Context library
         </a>
-        <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400">
-          <GitBranch className="size-4" aria-hidden="true" />
-          Proposals
-          <span className="ml-auto text-[10px]">Later phase</span>
+        <span aria-disabled="true" className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-stone-400">
+          <GitBranch className="size-4" aria-hidden="true" /> Proposals <span className="ml-auto text-[10px]">Soon</span>
         </span>
-        <span className="flex cursor-not-allowed items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-slate-400">
-          <Clock3 className="size-4" aria-hidden="true" />
-          Releases
-          <span className="ml-auto text-[10px]">Later phase</span>
+        <span aria-disabled="true" className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-xs text-stone-400">
+          <Clock3 className="size-4" aria-hidden="true" /> Activity <span className="ml-auto text-[10px]">Soon</span>
         </span>
       </nav>
 
-      <div className="mt-auto rounded-xl bg-slate-950 p-4 text-white">
-        <div className="mb-3 flex size-8 items-center justify-center rounded-lg bg-white/10">
-          <Sparkles className="size-4 text-indigo-200" aria-hidden="true" />
-        </div>
-        <p className="text-xs font-semibold">Why was this decided?</p>
-        <p className="mt-1.5 text-[11px] leading-5 text-slate-300">
-          ContextOps keeps the reasoning, so the next AI doesn’t start from zero.
+      <div className="mt-auto rounded-lg border border-stone-200 bg-white p-3">
+        <p className="flex items-center gap-2 text-xs font-medium text-stone-800">
+          <Sparkles className="size-3.5 text-violet-600" aria-hidden="true" /> Context that travels
         </p>
+        <p className="mt-1.5 text-[11px] leading-5 text-stone-500">Keep the team’s reasoning available to every AI assistant.</p>
       </div>
     </aside>
   );
 }
 
-function ContextListItem({
-  record,
-  selected,
+function ContextTable({
+  items,
+  selectedId,
   search,
   type,
 }: {
-  record: ContextRecord;
-  selected: boolean;
+  items: ContextRecord[];
+  selectedId?: string;
   search: string;
   type: string;
 }) {
+  if (items.length === 0) {
+    return (
+      <div className="flex flex-col items-center px-5 py-16 text-center">
+        <span className="flex size-10 items-center justify-center rounded-full bg-stone-100 text-stone-500">
+          <Search className="size-4" aria-hidden="true" />
+        </span>
+        <p className="mt-3 text-sm font-medium text-stone-800">No matching context</p>
+        <p className="mt-1 text-xs text-stone-500">Try another search or context type.</p>
+      </div>
+    );
+  }
+
   return (
-    <a
-      href={queryHref(search, type, record.id)}
-      aria-current={selected ? "true" : undefined}
-      className={`block rounded-xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-        selected
-          ? "border-indigo-200 bg-indigo-50/60 shadow-sm"
-          : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50/70"
-      }`}
-    >
-      <div className="flex flex-wrap items-center gap-2">
-        <TypeBadge type={record.type} />
-        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700">
-          <Check className="size-3.5" aria-hidden="true" /> Approved
-        </span>
-        <span className="ml-auto text-[11px] text-slate-400">
-          {formatDate(record.updatedAt)}
-        </span>
-      </div>
-      <h3 className="mt-3 text-sm font-semibold leading-6 text-slate-900">
-        {record.title}
-      </h3>
-      <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-600">
-        {record.summary}
-      </p>
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {record.tags.slice(0, 3).map((tag) => (
-          <span
-            key={tag}
-            className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-500"
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-    </a>
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[680px] border-collapse text-left">
+        <thead>
+          <tr className="border-b border-stone-200 bg-stone-50/80 text-[10px] font-semibold uppercase tracking-[0.1em] text-stone-400">
+            <th scope="col" className="px-4 py-3 font-semibold">Context</th>
+            <th scope="col" className="px-4 py-3 font-semibold">Type</th>
+            <th scope="col" className="px-4 py-3 font-semibold">Tags</th>
+            <th scope="col" className="px-4 py-3 font-semibold"><span className="inline-flex items-center gap-1"><ArrowDownUp className="size-3" aria-hidden="true" /> Updated</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((record) => {
+            const selected = selectedId === record.id;
+            return (
+              <tr key={record.id} className={`border-b border-stone-100 last:border-0 ${selected ? "bg-violet-50/60" : "hover:bg-stone-50/70"}`}>
+                <td className="max-w-[420px] px-4 py-3.5">
+                  <a href={queryHref(search, type, record.id)} aria-current={selected ? "true" : undefined} className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500">
+                    <span className="block truncate text-[13px] font-medium text-stone-900">{record.title}</span>
+                    <span className="mt-1 block line-clamp-1 text-xs text-stone-500">{record.summary}</span>
+                  </a>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3.5"><TypeBadge type={record.type} /></td>
+                <td className="max-w-[180px] px-4 py-3.5">
+                  <div className="flex flex-wrap gap-1">
+                    {record.tags.slice(0, 2).map((tag) => <span key={tag} className="rounded bg-stone-100 px-1.5 py-1 text-[10px] text-stone-500">{tag}</span>)}
+                  </div>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3.5 text-xs text-stone-500">{formatDate(record.updatedAt)}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
 function ContextDetails({ record }: { record: ContextRecord }) {
   return (
-    <Card className="overflow-hidden rounded-2xl border-slate-200 shadow-sm">
-      <CardHeader className="border-b border-slate-100 bg-white px-5 py-4">
+    <Card className="overflow-hidden rounded-lg border-stone-200 bg-white py-0 shadow-none">
+      <div className="border-b border-stone-200 px-4 py-3.5">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
-            Decision trail
-          </CardTitle>
-          <Badge variant="outline" className="rounded-full border-emerald-200 bg-emerald-50 text-emerald-700">
-            <Check className="mr-1 size-3" aria-hidden="true" /> Approved
+          <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">Decision trail</span>
+          <Badge variant="outline" className="gap-1 rounded-md border-emerald-200 bg-emerald-50 text-emerald-700">
+            <Check className="size-3" aria-hidden="true" /> Approved
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-5 px-5 py-5">
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Question
-          </p>
-          <p className="mt-1.5 text-xs leading-5 text-slate-700">{record.question}</p>
+        <h2 className="mt-3 text-base font-semibold leading-6 tracking-tight text-stone-900">{record.title}</h2>
+        <div className="mt-2"><TypeBadge type={record.type} /></div>
+      </div>
+      <CardContent className="space-y-5 px-4 py-4">
+        <DetailSection label="Question"><p>{record.question}</p></DetailSection>
+        <DetailSection label="Outcome"><p className="font-medium text-stone-800">{record.summary}</p></DetailSection>
+        <DetailSection label="Why the team chose it"><p>{record.rationale}</p></DetailSection>
+        {record.constraints.length > 0 && <DetailSection label="Constraints"><ul className="list-disc space-y-1 pl-4">{record.constraints.map((item) => <li key={item}>{item}</li>)}</ul></DetailSection>}
+        {record.alternatives.length > 0 && <DetailSection label="Alternatives discussed"><ul className="list-disc space-y-1 pl-4">{record.alternatives.map((item) => <li key={item}>{item}</li>)}</ul></DetailSection>}
+        <div className="rounded-md bg-violet-50/80 p-3">
+          <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-violet-700"><Sparkles className="size-3.5" aria-hidden="true" /> Discussion trail</p>
+          <p className="mt-2 text-xs leading-5 text-stone-700">{record.discussionSummary}</p>
         </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Outcome
-          </p>
-          <p className="mt-1.5 text-xs font-medium leading-5 text-slate-800">
-            {record.summary}
-          </p>
-        </div>
-        <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Why the team chose it
-          </p>
-          <p className="mt-1.5 text-xs leading-5 text-slate-600">{record.rationale}</p>
-        </div>
-        {record.constraints.length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-              Constraints
-            </p>
-            <ul className="mt-2 space-y-2">
-              {record.constraints.map((constraint) => (
-                <li key={constraint} className="flex gap-2 text-xs leading-5 text-slate-600">
-                  <span className="mt-2 size-1 shrink-0 rounded-full bg-indigo-400" />
-                  {constraint}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {record.alternatives.length > 0 && (
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-              Other options discussed
-            </p>
-            <ul className="mt-2 space-y-2">
-              {record.alternatives.map((alternative) => (
-                <li key={alternative} className="flex gap-2 text-xs leading-5 text-slate-600">
-                  <span className="mt-2 size-1 shrink-0 rounded-full bg-slate-300" />
-                  {alternative}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        <div className="rounded-xl border border-indigo-100 bg-indigo-50/70 p-3.5">
-          <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-indigo-700">
-            <Sparkles className="size-3.5" aria-hidden="true" /> Discussion context
-          </p>
-          <p className="mt-2 text-xs leading-5 text-slate-700">{record.discussionSummary}</p>
-        </div>
-        <div className="border-t border-slate-100 pt-4">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-400">
-            Source notes
-          </p>
-          <ul className="mt-2 space-y-1.5">
-            {record.sourceReferences.map((source) => (
-              <li key={source} className="flex items-start gap-2 text-[11px] leading-5 text-slate-500">
-                <ArrowUpRight className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
-                {source}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 flex items-center justify-between text-[10px] text-slate-400">
-            <span>Added by {record.owner}</span>
-            <span>{formatDate(record.updatedAt)}</span>
-          </div>
+        <div className="border-t border-stone-100 pt-4">
+          <DetailSection label="Source notes"><ul className="space-y-1.5">{record.sourceReferences.map((source) => <li key={source} className="flex items-start gap-1.5"><ArrowUpRight className="mt-0.5 size-3 shrink-0" aria-hidden="true" />{source}</li>)}</ul></DetailSection>
+          <p className="mt-3 text-[10px] text-stone-400">Added by {record.owner} · {formatDate(record.updatedAt)}</p>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function LoadingShell() {
+function DetailSection({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <main className="min-h-screen bg-[#f7f8fc] px-5 py-12 text-center text-sm text-slate-500">
-      Loading the team’s approved context…
-    </main>
+    <section>
+      <h3 className="text-[10px] font-semibold uppercase tracking-[0.12em] text-stone-400">{label}</h3>
+      <div className="mt-1.5 text-xs leading-5 text-stone-600">{children}</div>
+    </section>
   );
 }
 
+function LoadingShell() {
+  return <main className="min-h-screen bg-stone-50 px-6 py-12 text-center text-sm text-stone-500">Loading shared context…</main>;
+}
+
 export default function Home({ searchParams }: { searchParams: SearchParams }) {
-  return (
-    <Suspense fallback={<LoadingShell />}>
-      <ContextWorkspace searchParams={searchParams} />
-    </Suspense>
-  );
+  return <Suspense fallback={<LoadingShell />}><ContextWorkspace searchParams={searchParams} /></Suspense>;
 }
 
 async function ContextWorkspace({ searchParams }: { searchParams: SearchParams }) {
@@ -359,189 +279,86 @@ async function ContextWorkspace({ searchParams }: { searchParams: SearchParams }
   const selected = result.items.find((item) => item.id === params.selected) ?? result.items[0];
 
   return (
-    <div className="flex min-h-screen bg-[#f7f8fc] text-slate-900">
-      <Sidebar />
-
+    <div className="flex min-h-screen bg-stone-50 text-stone-900">
+      <WorkspaceSidebar />
       <div className="min-w-0 flex-1">
-        <header className="flex h-16 items-center justify-between border-b border-slate-200/80 bg-white/90 px-5 md:px-8">
-          <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span>ContextOps demo</span>
-            <span className="text-slate-300">/</span>
-            <span className="font-medium text-slate-800">Shared context</span>
+        <header className="flex h-14 items-center justify-between border-b border-stone-200 bg-white px-4 md:px-7">
+          <div className="flex items-center gap-2 text-xs text-stone-500">
+            <span className="font-medium text-stone-700">ContextOps Demo</span><span className="text-stone-300">/</span><span>Context library</span>
           </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="rounded-full border-slate-200 bg-white px-2.5 py-1 text-[10px] font-medium text-slate-500">
-              Demo records
-            </Badge>
-            <span className="flex size-8 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
-              CO
-            </span>
+          <div className="flex items-center gap-2">
+            <span className="hidden rounded-md border border-stone-200 bg-stone-50 px-2 py-1 text-[10px] text-stone-500 sm:inline">LOCAL DEMO</span>
+            <span className="flex size-7 items-center justify-center rounded-full bg-stone-900 text-[10px] font-semibold text-white" aria-label="ContextOps demo user">C</span>
           </div>
         </header>
 
-        <main className="mx-auto max-w-[1500px] px-4 py-7 md:px-8 md:py-9">
-          <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+        <main className="mx-auto max-w-[1600px] px-4 py-6 md:px-7 md:py-8">
+          <div className="flex flex-col justify-between gap-4 border-b border-stone-200 pb-5 sm:flex-row sm:items-end">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-indigo-600">
-                Project knowledge
-              </p>
-              <h1 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 md:text-[28px]">
-                Shared context
-              </h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                Decisions, the reasons behind them, and important project notes—ready for every teammate and AI assistant.
-              </p>
+              <p className="text-[11px] font-medium text-violet-700">TEAM KNOWLEDGE</p>
+              <h1 className="mt-1 text-2xl font-semibold tracking-tight text-stone-950">Shared context</h1>
+              <p className="mt-1.5 max-w-2xl text-sm text-stone-500">Decisions and the reasoning behind them, available to everyone on the project.</p>
             </div>
-            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs text-slate-600 shadow-sm">
-              <GitBranch className="size-4 text-slate-400" aria-hidden="true" />
-              <span>Sample context repository</span>
+            <div className="flex items-center gap-2 text-xs text-stone-500">
+              <GitBranch className="size-3.5" aria-hidden="true" /> Sample Markdown repository
               <span className="size-1.5 rounded-full bg-amber-400" aria-label="Local demo source" />
             </div>
           </div>
 
-          <section aria-label="Context summary" className="mt-7 grid gap-3 sm:grid-cols-3">
-            <Card className="rounded-2xl border-slate-200 shadow-sm">
-              <CardContent className="flex items-center gap-3.5 p-4">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-                  <BookOpenText className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-xl font-semibold tracking-tight">{result.items.length}</span>
-                  <span className="block text-xs text-slate-500">Approved records</span>
-                </span>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl border-slate-200 shadow-sm">
-              <CardContent className="flex items-center gap-3.5 p-4">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                  <Layers3 className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-xl font-semibold tracking-tight">7</span>
-                  <span className="block text-xs text-slate-500">Context types</span>
-                </span>
-              </CardContent>
-            </Card>
-            <Card className="rounded-2xl border-slate-200 shadow-sm">
-              <CardContent className="flex items-center gap-3.5 p-4">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-                  <Sparkles className="size-5" aria-hidden="true" />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold tracking-tight">Reasoning included</span>
-                  <span className="block text-xs text-slate-500">Not just the final answer</span>
-                </span>
-              </CardContent>
-            </Card>
-          </section>
-
           {result.error && (
-            <div role="alert" className="mt-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-              <div>
-                <p className="font-medium">The context service isn’t running.</p>
-                <p className="mt-1 text-xs leading-5 text-amber-800">
-                  Start the NestJS API from the repository root, then refresh this page.
-                </p>
-              </div>
+            <div role="alert" className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+              <p className="font-medium">The context service isn’t running.</p>
+              <p className="mt-1">Start the NestJS API, then refresh this page.</p>
             </div>
           )}
 
-          <div className="mt-7 grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
-            <section aria-labelledby="context-list-heading" className="min-w-0">
-              <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                <div>
-                  <h2 id="context-list-heading" className="text-sm font-semibold text-slate-900">
-                    Context library
-                  </h2>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Search the team’s approved knowledge and decision trails.
-                  </p>
+          <div className="mt-6 grid items-start gap-5 2xl:grid-cols-[minmax(0,1fr)_370px]">
+            <section aria-labelledby="library-heading" className="min-w-0 overflow-hidden rounded-lg border border-stone-200 bg-white">
+              <div className="border-b border-stone-200 p-4 md:px-5">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                  <div>
+                    <h2 id="library-heading" className="text-sm font-semibold text-stone-900">Context records</h2>
+                    <p className="mt-1 text-xs text-stone-500">{result.items.length} {result.items.length === 1 ? "record" : "records"} · select one to inspect its reasoning</p>
+                  </div>
+                  <Button disabled variant="outline" className="h-8 w-fit rounded-md border-stone-200 px-3 text-xs text-stone-400">
+                    <Sparkles className="mr-1.5 size-3.5" aria-hidden="true" /> Propose context <span className="ml-1 text-[10px]">Coming later</span>
+                  </Button>
                 </div>
-                <Button disabled variant="outline" className="w-fit gap-2 rounded-lg border-slate-200 bg-white text-xs text-slate-400">
-                  <Sparkles className="size-3.5" aria-hidden="true" />
-                  Propose context · next phase
-                </Button>
+                <form action="/" method="get" className="mt-4 flex gap-2">
+                  {activeType && <input type="hidden" name="type" value={activeType} />}
+                  <div className="relative min-w-0 flex-1">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-stone-400" aria-hidden="true" />
+                    <Input type="search" name="q" defaultValue={search} placeholder="Search titles, reasons, alternatives…" aria-label="Search context records" className="h-9 rounded-md border-stone-200 pl-9 text-xs shadow-none placeholder:text-stone-400" />
+                  </div>
+                  <Button type="submit" className="h-9 rounded-md bg-stone-900 px-3.5 text-xs text-white hover:bg-stone-700">Search</Button>
+                </form>
+                <nav aria-label="Filter by context type" className="mt-3 flex gap-1.5 overflow-x-auto pb-0.5">
+                  <FilterLink label="All types" active={!activeType} href={queryHref(search, "")} />
+                  {TYPES.map((type) => <FilterLink key={type} label={TYPE_META[type].label} active={activeType === type} href={queryHref(search, type)} />)}
+                </nav>
               </div>
-
-              <form action="/" method="get" className="flex gap-2">
-                {activeType && <input type="hidden" name="type" value={activeType} />}
-                <div className="relative min-w-0 flex-1">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-                  <Input
-                    type="search"
-                    name="q"
-                    defaultValue={search}
-                    placeholder="Search decisions, reasoning, constraints..."
-                    aria-label="Search context records"
-                    className="h-10 rounded-lg border-slate-200 bg-white pl-9 text-sm shadow-sm placeholder:text-slate-400"
-                  />
-                </div>
-                <Button type="submit" className="h-10 rounded-lg bg-indigo-600 px-4 text-xs text-white hover:bg-indigo-700">
-                  Search
-                </Button>
-              </form>
-
-              <div className="mt-3 flex gap-2 overflow-x-auto pb-2" aria-label="Filter by context type">
-                <a href={queryHref(search, "")} className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium ${!activeType ? "border-indigo-200 bg-indigo-50 text-indigo-700" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}>
-                  All types
-                </a>
-                {TYPES.map((type) => (
-                  <a key={type} href={queryHref(search, type)} className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-medium ${activeType === type ? "border-indigo-200 bg-indigo-50 text-indigo-700" : "border-slate-200 bg-white text-slate-500 hover:bg-slate-50"}`}>
-                    {TYPE_META[type].label}
-                  </a>
-                ))}
-              </div>
-
-              <div className="mb-3 mt-2 flex items-center justify-between text-[11px] text-slate-400">
-                <span>{result.items.length} {result.items.length === 1 ? "record" : "records"}</span>
-                <span>Sorted by recent update</span>
-              </div>
-
-              {result.items.length > 0 ? (
-                <div className="space-y-2.5">
-                  {result.items.map((record) => (
-                    <ContextListItem
-                      key={record.id}
-                      record={record}
-                      selected={selected?.id === record.id}
-                      search={search}
-                      type={activeType}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <Card className="rounded-2xl border-dashed border-slate-300 bg-white/70 shadow-none">
-                  <CardContent className="flex flex-col items-center px-6 py-12 text-center">
-                    <span className="flex size-11 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                      <Search className="size-5" aria-hidden="true" />
-                    </span>
-                    <p className="mt-4 text-sm font-medium text-slate-800">No matching context</p>
-                    <p className="mt-1 max-w-sm text-xs leading-5 text-slate-500">
-                      Try another phrase or select a different context type.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+              <ContextTable items={result.items} selectedId={selected?.id} search={search} type={activeType} />
             </section>
 
-            <aside aria-label="Selected context details" className="xl:sticky xl:top-5">
-              {selected ? (
-                <ContextDetails record={selected} />
-              ) : (
-                <Card className="rounded-2xl border-slate-200 shadow-sm">
-                  <CardContent className="p-6 text-center text-xs text-slate-500">
-                    Select a context record to see its decision trail.
-                  </CardContent>
+            <aside aria-label="Selected context details" className="min-w-0 2xl:sticky 2xl:top-5">
+              {selected ? <ContextDetails record={selected} /> : (
+                <Card className="rounded-lg border-stone-200 py-0 shadow-none">
+                  <CardContent className="px-5 py-8 text-center text-xs text-stone-500">Select a context record to see the decision and its discussion trail.</CardContent>
                 </Card>
               )}
-              <p className="mt-3 px-2 text-[10px] leading-5 text-slate-400">
-                Sample content for the ContextOps demo. The database choice shown here is illustrative and is not a finalized ContextOps decision.
-              </p>
+              <p className="mt-2 px-1 text-[10px] leading-4 text-stone-400">Demo records only. The database example is illustrative, not a finalized project decision.</p>
             </aside>
           </div>
         </main>
       </div>
     </div>
+  );
+}
+
+function FilterLink({ label, active, href }: { label: string; active: boolean; href: string }) {
+  return (
+    <a href={href} aria-current={active ? "page" : undefined} className={`shrink-0 rounded-md border px-2.5 py-1.5 text-[11px] font-medium transition-colors ${active ? "border-stone-300 bg-stone-100 text-stone-900" : "border-transparent text-stone-500 hover:border-stone-200 hover:bg-stone-50 hover:text-stone-800"}`}>
+      {label}
+    </a>
   );
 }
