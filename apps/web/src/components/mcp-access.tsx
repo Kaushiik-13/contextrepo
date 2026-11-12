@@ -25,6 +25,8 @@ export function McpAccess() {
   const [busy, setBusy] = useState(false);
   const [agent, setAgent] = useState<Agent>("Codex");
   const [copied, setCopied] = useState(false);
+  const [setupCopied, setSetupCopied] = useState(false);
+  const [keyCopied, setKeyCopied] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/proposals/mcp-token`, {
@@ -82,14 +84,31 @@ export function McpAccess() {
   }
 
   function environmentSetup() {
-    return `$secure = Read-Host "Paste your ContextOps MCP key" -AsSecureString\n$ptr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($secure)\ntry {\n  $token = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr)\n  [Environment]::SetEnvironmentVariable("CONTEXTOPS_MCP_TOKEN", $token, "User")\n} finally {\n  [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($ptr)\n  Remove-Variable token, secure, ptr -ErrorAction SilentlyContinue\n}`;
+    return `$token = Read-Host "Paste your ContextOps MCP key"
+[Environment]::SetEnvironmentVariable("CONTEXTOPS_MCP_TOKEN", $token, "User")
+$env:CONTEXTOPS_MCP_TOKEN = $token`;
+  }
+
+  async function copyKey() {
+    await navigator.clipboard.writeText(fresh);
+    setKeyCopied(true);
+    window.setTimeout(() => setKeyCopied(false), 1800);
   }
 
   const snippets: Record<Agent, string> = {
-    Codex: `${environmentSetup()}\n\ncodex mcp add contextops --url ${MCP_URL} --bearer-token-env-var CONTEXTOPS_MCP_TOKEN`,
-    "Claude Code": `${environmentSetup()}\n\nclaude mcp add-json contextops '{"type":"http","url":"${MCP_URL}","headers":{"Authorization":"Bearer \${CONTEXTOPS_MCP_TOKEN}"}}'`,
-    Cursor: `${environmentSetup()}\n\nAdd this server in Cursor MCP settings (or .cursor/mcp.json):\n{\n  "mcpServers": {\n    "contextops": {\n      "type": "http",\n      "url": "${MCP_URL}",\n      "headers": { "Authorization": "Bearer \${CONTEXTOPS_MCP_TOKEN}" }\n    }\n  }\n}`,
-    "Other MCP apps": `Server URL: ${MCP_URL}\nTransport: Streamable HTTP\nAuthentication header: Authorization: Bearer <your ContextOps MCP key>\n\nThe ContextOps API must be running on this computer.`,
+    Codex: `codex mcp add contextops --url ${MCP_URL} --bearer-token-env-var CONTEXTOPS_MCP_TOKEN`,
+    "Claude Code": `claude mcp add-json contextops '{"type":"http","url":"${MCP_URL}","headers":{"Authorization":"Bearer \${CONTEXTOPS_MCP_TOKEN}"}}'`,
+    Cursor: `{
+  "mcpServers": {
+    "contextops": {
+      "url": "${MCP_URL}",
+      "headers": {
+        "Authorization": "Bearer \${env:CONTEXTOPS_MCP_TOKEN}"
+      }
+    }
+  }
+}`,
+    "Other MCP apps": `Server URL: ${MCP_URL}\nTransport: Streamable HTTP\nAuthentication header: Authorization: Bearer <your ContextOps MCP key>`,
     ChatGPT:
       "ChatGPT in a browser cannot connect to localhost. ContextOps needs a public HTTPS address and a cloud-compatible sign-in setup before ChatGPT can connect.",
   };
@@ -98,6 +117,12 @@ export function McpAccess() {
     await navigator.clipboard.writeText(snippets[agent]);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  async function copyEnvironmentSetup() {
+    await navigator.clipboard.writeText(environmentSetup());
+    setSetupCopied(true);
+    window.setTimeout(() => setSetupCopied(false), 1800);
   }
 
   return (
@@ -154,13 +179,13 @@ export function McpAccess() {
                 <code className="min-w-0 flex-1 break-all rounded bg-white px-2 py-1.5 text-xs">
                   {fresh}
                 </code>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  aria-label="Copy MCP key"
-                  onClick={() => navigator.clipboard.writeText(fresh)}
-                >
-                  <Copy className="size-4" aria-hidden="true" />
+                <Button size="sm" variant="outline" onClick={copyKey}>
+                  {keyCopied ? (
+                    <Check className="size-4" aria-hidden="true" />
+                  ) : (
+                    <Copy className="size-4" aria-hidden="true" />
+                  )}
+                  {keyCopied ? "Copied" : "Copy key"}
                 </Button>
               </div>
             </div>
@@ -180,7 +205,7 @@ export function McpAccess() {
           <div className="mt-5 overflow-hidden rounded-xl border border-stone-200 bg-white">
             <div className="border-b border-stone-100 px-4 pt-3">
               <p className="text-xs font-medium text-stone-800">
-                Setup instructions
+                Connect your agent
               </p>
               <div
                 className="mt-3 flex gap-1 overflow-x-auto"
@@ -204,57 +229,127 @@ export function McpAccess() {
                 ))}
               </div>
             </div>
-            <div role="tabpanel" className="p-4">
+            <div role="tabpanel" className="space-y-4 p-4">
               {agent === "ChatGPT" ? (
-                <div className="rounded-lg bg-amber-50 px-3.5 py-3 text-xs leading-5 text-amber-950">
-                  {snippets[agent]}
+                <div className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-4">
+                  <p className="text-sm font-medium text-stone-900">
+                    ChatGPT connection is not ready yet
+                  </p>
+                  <p className="mt-1 text-xs leading-5 text-stone-600">
+                    This local setup uses <code>localhost</code>, which ChatGPT
+                    cannot reach. It will need a public HTTPS address and a
+                    sign-in method supported by ContextOps.
+                  </p>
                 </div>
               ) : (
-                <>
-                  <ol className="mb-3 list-decimal space-y-1.5 pl-4 text-xs leading-5 text-stone-600">
-                    <li>
-                      Make sure the ContextOps API is running on this computer.
-                    </li>
-                    <li>
-                      Create a key above, then run the setup below. It saves the
-                      key as a private Windows user variable and registers this
-                      agent.
-                    </li>
-                    <li>
-                      Restart the agent, then ask it to search approved context
-                      or submit a proposal draft.
-                    </li>
-                  </ol>
-                  <div className="relative">
-                    <pre className="max-h-52 overflow-auto rounded-lg bg-stone-950 p-3 pr-20 text-[11px] leading-5 text-stone-100">
-                      <code>{snippets[agent]}</code>
-                    </pre>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="absolute right-2 top-2 h-7 gap-1.5 text-xs"
-                      onClick={copyInstructions}
-                    >
-                      {copied ? (
-                        <Check className="size-3.5" aria-hidden="true" />
-                      ) : (
-                        <Copy className="size-3.5" aria-hidden="true" />
-                      )}
-                      {copied ? "Copied" : "Copy setup"}
-                    </Button>
-                  </div>
-                  <p className="mt-2 text-[11px] leading-4 text-stone-500">
-                    The same computer can use{" "}
-                    <code className="rounded bg-stone-100 px-1">{MCP_URL}</code>
-                    . Keep the access key private. Each user needs their own
-                    key.
-                  </p>
-                </>
+                <div className="space-y-5">
+                  <Step number="1" title="Save your key on this computer">
+                    <p className="text-xs leading-5 text-stone-600">
+                      Do this once. Copy the setup into PowerShell and run it.
+                      When asked, enter your MCP key. It is saved for your
+                      Windows account.
+                    </p>
+                    <CodeBlock
+                      value={environmentSetup()}
+                      copied={setupCopied}
+                      onCopy={copyEnvironmentSetup}
+                      buttonLabel="Copy setup"
+                    />
+                  </Step>
+                  <Step number="2" title={`Add ContextOps to ${agent}`}>
+                    <p className="text-xs leading-5 text-stone-600">
+                      {agent === "Cursor"
+                        ? "Paste this JSON into Cursor’s MCP settings or your project’s .cursor/mcp.json file."
+                        : agent === "Other MCP apps"
+                          ? "Add a Streamable HTTP server using this address and bearer key."
+                          : "Copy and run this command in PowerShell."}
+                    </p>
+                    <CodeBlock
+                      value={snippets[agent]}
+                      copied={copied}
+                      onCopy={copyInstructions}
+                      buttonLabel={
+                        agent === "Cursor" ? "Copy config" : "Copy command"
+                      }
+                    />
+                  </Step>
+                  <Step number="3" title="Restart and check">
+                    <p className="text-xs leading-5 text-stone-600">
+                      Restart {agent}. Then ask it to search ContextOps for a
+                      decision. Keep the ContextOps API running.
+                    </p>
+                    {agent === "Codex" && (
+                      <code className="mt-2 inline-block rounded-md bg-stone-100 px-2 py-1 text-[11px] text-stone-700">
+                        codex mcp list
+                      </code>
+                    )}
+                    {agent === "Claude Code" && (
+                      <code className="mt-2 inline-block rounded-md bg-stone-100 px-2 py-1 text-[11px] text-stone-700">
+                        claude mcp list
+                      </code>
+                    )}
+                  </Step>
+                </div>
               )}
             </div>
           </div>
         </div>
       </div>
     </section>
+  );
+}
+
+function Step({
+  number,
+  title,
+  children,
+}: {
+  number: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid gap-3 sm:grid-cols-[28px_minmax(0,1fr)]">
+      <span className="flex size-7 items-center justify-center rounded-full border border-stone-200 bg-white text-xs font-semibold text-stone-700">
+        {number}
+      </span>
+      <div className="min-w-0 pt-1">
+        <h4 className="text-sm font-semibold text-stone-900">{title}</h4>
+        <div className="mt-1.5">{children}</div>
+      </div>
+    </section>
+  );
+}
+
+function CodeBlock({
+  value,
+  copied,
+  onCopy,
+  buttonLabel,
+}: {
+  value: string;
+  copied: boolean;
+  onCopy: () => void;
+  buttonLabel: string;
+}) {
+  return (
+    <div className="relative mt-2">
+      <pre className="max-h-48 overflow-auto rounded-lg bg-stone-950 p-3 pr-28 text-[11px] leading-5 text-stone-100">
+        <code>{value}</code>
+      </pre>
+      <Button
+        size="sm"
+        variant="secondary"
+        className="absolute right-2 top-2 h-7 gap-1.5 text-[11px]"
+        onClick={onCopy}
+      >
+        {copied ? (
+          <Check className="size-3.5" aria-hidden="true" />
+        ) : (
+          <Copy className="size-3.5" aria-hidden="true" />
+        )}
+        {copied ? "Copied" : buttonLabel}
+      </Button>
+    </div>
   );
 }

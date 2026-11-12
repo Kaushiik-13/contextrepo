@@ -10,18 +10,16 @@ ContextOps exposes a Streamable HTTP MCP endpoint for creating proposal drafts a
 - A person signs in to ContextOps, reviews the proposal on the Proposals page, then approves or rejects it.
 - Approval writes a Markdown file with YAML front matter to the selected repository and default branch.
 
-## Create an access key
+## Connect an AI assistant on Windows
 
 1. Sign in to ContextOps and open **Settings** by clicking your account at the bottom of the sidebar.
-2. Under **Connect an AI assistant (MCP)**, select **Create MCP access key**.
-3. Copy it immediately. ContextOps stores only a hash and cannot display the key again. Replace or revoke it from Settings if needed.
-4. Configure your MCP client to use the endpoint above and send this HTTP header:
+2. Under **Connect an AI assistant**, choose **Create MCP key** and copy the key. ContextOps shows it only once; replace or revoke it from Settings if needed.
+3. In Settings, select your assistant and follow the three on-screen steps. The first step saves the key as a Windows user environment variable. The agent setup command or config uses that variable, so the key is not written into your project files.
+4. Restart the assistant and ask it to search ContextOps for an approved decision. Keep the ContextOps API running.
 
-```text
-Authorization: Bearer <your ContextOps key>
-```
+The current guide includes Codex, Claude Code, Cursor, and generic MCP apps. ChatGPT in a browser cannot connect to this local `localhost` endpoint; that requires a public HTTPS deployment and compatible sign-in.
 
-For an MCP client that supports Streamable HTTP, add `http://localhost:4000/api/mcp` as the server URL and provide the bearer header. The exact config format depends on the client. Do not paste the key into a public repository, shared prompt, or screenshot. This local endpoint works only while the ContextOps API is running on the same machine/network; remote AI services need a securely reachable HTTPS deployment.
+For other MCP apps, use the Streamable HTTP endpoint `http://localhost:4000/api/mcp` and the header `Authorization: Bearer <your ContextOps key>`. Do not paste the key into a public repository, shared prompt, or screenshot. This local endpoint works only while the ContextOps API is running on the same machine/network; remote AI services need a securely reachable HTTPS deployment.
 
 The tool accepts a title, one of the seven context types, question, summary, rationale, and optional tags, constraints, alternatives, discussion notes, and references. It returns the saved draft ID and confirms that human review is required.
 
