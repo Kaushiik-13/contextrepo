@@ -40,7 +40,7 @@ export function NavMain({
                 className="group/nav h-11 rounded-xl px-3 text-[13px] font-medium text-stone-600 transition-[background,color,transform] duration-150 hover:translate-x-0.5 hover:bg-white/80 hover:text-stone-950 data-active:bg-white data-active:text-violet-950 data-active:shadow-[0_3px_12px_-9px_rgba(28,25,23,0.5)] data-active:ring-1 data-active:ring-stone-200/80 data-active:hover:translate-x-0"
               >
                 <span
-                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors ${item.isActive ? "bg-violet-100 text-violet-800" : "text-stone-500 group-hover/nav:bg-stone-100 group-hover/nav:text-stone-800"}`}
+                  className={`flex size-7 shrink-0 items-center justify-center rounded-lg transition-colors group-data-[collapsible=icon]:size-4 group-data-[collapsible=icon]:rounded-none group-data-[collapsible=icon]:bg-transparent ${item.isActive ? "bg-violet-100 text-violet-800 group-data-[collapsible=icon]:text-violet-800" : "text-stone-500 group-hover/nav:bg-stone-100 group-hover/nav:text-stone-800"}`}
                   aria-hidden="true"
                 >
                   {item.icon}

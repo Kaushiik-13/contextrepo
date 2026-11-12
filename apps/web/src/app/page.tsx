@@ -191,18 +191,12 @@ async function ContextDashboard({
             >
               <GitBranch className="size-3.5" aria-hidden="true" />
               {project.connectionStatus === "connected"
-                ? "GitHub connected"
+                ? result.error
+                  ? "GitHub connected"
+                  : `GitHub connected · ${result.data?.branch ?? project.defaultBranch}`
                 : project.connectionStatus === "verification_unavailable"
                   ? "Connection check unavailable"
                   : "GitHub access needs attention"}
-            </Badge>
-            <Badge
-              variant="outline"
-              className="w-fit gap-1.5 border-stone-200 bg-white font-normal text-stone-600"
-            >
-              {result.error
-                ? "GitHub context source"
-                : `Live GitHub · ${result.data?.branch ?? project.defaultBranch}`}
             </Badge>
           </div>
         </div>
