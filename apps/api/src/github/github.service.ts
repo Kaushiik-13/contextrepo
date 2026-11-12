@@ -29,6 +29,7 @@ type GithubContentEntry = {
   name: string;
   path: string;
   type: 'file' | 'dir' | 'symlink' | 'submodule';
+  sha?: string;
   size?: number;
   content?: string;
   encoding?: string;
@@ -729,21 +730,38 @@ export class GithubService {
         .slice(0, 60) || 'context';
     const path = `context/${String(record.type)}/${slug}-${String(record.id)}.md`;
     const contents = matter.stringify('', record);
-    const response = await fetch(
-      `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`,
-      {
-        method: 'PUT',
-        headers: {
-          ...this.githubHeaders(access.token),
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `docs(context): approve ${String(record.title).slice(0, 100)}`,
-          branch: project.default_branch,
-          content: Buffer.from(contents, 'utf8').toString('base64'),
-        }),
-      },
+    const fileUrl = `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`;
+    const headers = {
+      ...this.githubHeaders(access.token),
+      'Content-Type': 'application/json',
+    };
+    const existingResponse = await fetch(
+      `${fileUrl}?ref=${encodeURIComponent(project.default_branch)}`,
+      { headers },
     );
+    let existingSha: string | undefined;
+    if (existingResponse.ok) {
+      const existing = (await existingResponse.json()) as GithubContentEntry;
+      existingSha = existing.sha;
+      if (!existingSha)
+        throw new BadGatewayException(
+          'GitHub found the context file but did not return its file version. Try again.',
+        );
+    } else if (existingResponse.status !== 404) {
+      throw new BadGatewayException(
+        'GitHub could not check whether this context file already exists. Try again.',
+      );
+    }
+    const response = await fetch(fileUrl, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        message: `docs(context): approve ${String(record.title).slice(0, 100)}`,
+        branch: project.default_branch,
+        content: Buffer.from(contents, 'utf8').toString('base64'),
+        ...(existingSha ? { sha: existingSha } : {}),
+      }),
+    });
     if (!response.ok) {
       const detail = (await response.json().catch(() => null)) as {
         message?: string;
