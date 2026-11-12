@@ -29,6 +29,7 @@ export class DemoContextRepository implements ContextRepository {
         .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)),
       repository: 'ContextOps demo',
       branch: 'main',
+      commitSha: 'local-demo',
       contextFolderExists: true,
       warnings: [],
     };

@@ -8,6 +8,7 @@ import { DatabaseService } from '../database/database.service';
 import { GithubService } from '../github/github.service';
 import { CONTEXT_TYPES, type ContextType } from '../context/context.types';
 import matter from 'gray-matter';
+import { ContextService } from '../context/context.service';
 
 export type ProposalInput = {
   title: string;
@@ -27,6 +28,7 @@ export class ProposalService {
   constructor(
     private readonly db: DatabaseService,
     private readonly github: GithubService,
+    private readonly context: ContextService,
   ) {}
 
   async list(userId: string, statuses = ['draft']) {
@@ -135,6 +137,12 @@ export class ProposalService {
       discussionSummary: p.discussion_summary,
       sourceReferences: p.source_references ?? [],
     });
+    await this.db.query(
+      `INSERT INTO active_context_releases(project_id,github_commit_sha,branch,updated_at)
+       VALUES($1,$2,$3,NOW()) ON CONFLICT(project_id) DO UPDATE SET
+       github_commit_sha=EXCLUDED.github_commit_sha,branch=EXCLUDED.branch,updated_at=NOW()`,
+      [project.id, published.commitSha, published.branch],
+    );
     const out = await this.db.query<any>(
       `UPDATE context_proposals SET status='approved',reviewed_at=NOW(),review_note=$3,published_path=$4,published_commit_sha=$5,updated_at=NOW() WHERE id=$1 AND user_id=$2 AND status='draft' RETURNING *, (SELECT github_login FROM app_users WHERE id=$2) AS owner`,
       [id, userId, note.slice(0, 2000), published.path, published.commitSha],
@@ -216,6 +224,52 @@ export class ProposalService {
       [hash],
     );
     return row.rows[0]?.user_id ?? null;
+  }
+
+  async searchApprovedContext(userId: string, query?: string, type?: string) {
+    const project = await this.db.query<{ id: string }>(
+      `SELECT id FROM connected_projects WHERE user_id=$1 LIMIT 1`,
+      [userId],
+    );
+    if (!project.rowCount)
+      throw new NotFoundException(
+        'Connect a project before requesting context.',
+      );
+    let release = await this.db.query<{
+      github_commit_sha: string;
+      branch: string;
+    }>(
+      `SELECT github_commit_sha,branch FROM active_context_releases WHERE project_id=$1`,
+      [project.rows[0].id],
+    );
+    if (!release.rowCount) {
+      const head = await this.github.currentContextHead(userId);
+      await this.db.query(
+        `INSERT INTO active_context_releases(project_id,github_commit_sha,branch) VALUES($1,$2,$3) ON CONFLICT(project_id) DO NOTHING`,
+        [project.rows[0].id, head.commitSha, head.branch],
+      );
+      release = await this.db.query<{
+        github_commit_sha: string;
+        branch: string;
+      }>(
+        `SELECT github_commit_sha,branch FROM active_context_releases WHERE project_id=$1`,
+        [project.rows[0].id],
+      );
+    }
+    const version = release.rows[0];
+    const result = await this.context.list(
+      userId,
+      query,
+      type,
+      version.github_commit_sha,
+    );
+    return {
+      repository: result.repository,
+      branch: version.branch,
+      version: version.github_commit_sha,
+      total: result.total,
+      items: result.items.map((item) => ({ ...item, source: item.sourcePath })),
+    };
   }
 
   private async project(userId: string) {

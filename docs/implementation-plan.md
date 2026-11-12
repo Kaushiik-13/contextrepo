@@ -11,6 +11,7 @@ For example, Person A may discuss PostgreSQL versus MySQL with ChatGPT over seve
 Build the ContextOps product first. Use DevOps tools to deliver and run that product; don’t let infrastructure work become the main project.
 
 **Core product (must work):**
+
 - Connect a ContextOps project to a GitHub context repository.
 - Store and browse seven record types: Decision, Requirement, Constraint, Research, Rejected Approach, Open Question, and Project State.
 - Preserve each context item's reasoning trail: the question, final outcome, rationale, constraints, alternatives/tradeoffs, and selected discussion notes or source references.
@@ -21,6 +22,7 @@ Build the ContextOps product first. Use DevOps tools to deliver and run that pro
 - Support project progress handoffs, release history, and rollback.
 
 **Supporting delivery (keep small):**
+
 - Run locally in Docker Compose.
 - Use Jenkins for course-aligned automated checks and builds.
 - Demonstrate deployment on Kubernetes.
@@ -75,18 +77,18 @@ This first slice uses `examples/demo-context/` fixtures so the cross-assistant c
 
 **Complete when:** After applying migration `004_proposal_review_mcp.sql`, a human can approve a valid proposal and see it in GitHub and the Context library; rejected and draft records remain out of the approved library; an MCP client can submit a draft using a revocable key.
 
-### Phase 4 — Publish approved context and build MCP retrieval
+### Phase 4 — Pin context versions and add MCP retrieval (implemented; migration and manual verification pending)
 
-- Publish an approved, valid change as an immutable Git tag or commit-pinned release.
-- Track one active published release per project.
-- If publishing fails, continue serving the previous successful release.
-- Implement MCP retrieval from the active published release only.
-- Include version and source references in retrieval results.
+- Pin one active approved-context snapshot per project to the Git commit created by ContextOps approval. Store the active commit and branch in PostgreSQL.
+- When no ContextOps-published commit exists yet, pin the current repository head the first time an MCP retrieval is requested.
+- Implement the read-only `search_approved_context` MCP tool against that pinned commit, not the moving branch head.
+- Include the repository, branch, commit SHA, and source file path with results.
+- Draft and rejected records are never included. MCP cannot move the active version.
 - Keep MCP proposal submission as draft-only; never expose approval or publishing actions to AI clients.
 
 **Deliverable:** An independent AI assistant can retrieve the same approved project facts as another assistant.
 
-**Complete when:** Two separate AI sessions return the same approved decision, while drafts remain hidden from normal retrieval and AI clients cannot approve or publish proposals.
+**Complete when:** After applying `005_active_context_release.sql`, two independent MCP requests return the same pinned approved context and commit; a ContextOps approval moves the active commit forward; drafts/rejections stay hidden; MCP clients cannot approve or publish.
 
 ### Phase 5 — Add project progress and recovery
 
@@ -139,15 +141,15 @@ Do this after the single-project product and its DevOps demonstration work end t
 
 ## 4. Development-first syllabus mapping
 
-| Syllabus area | How it supports ContextOps development | Evidence in the finished project/demo |
-|---|---|---|
-| Linux, shell, permissions, networking | Develop/run services in Linux; use shell helpers; understand file access and service ports. | Document local setup and show the app services communicating correctly. |
-| Git and GitHub workflows | Use branches, commits, merges, pull requests, and conflict resolution while developing. | Show source-code pull requests; approved context is versioned in GitHub after ContextOps review. |
-| Jenkins CI/CD | Use Jenkins to check and build the application as it changes. | Show validation, build, image creation, and approved-context publishing stages. |
-| Docker and Compose | Package services and use Compose for local development. | Demonstrate the app running in containers on a developer machine. |
-| Kubernetes | Learn deployment concepts after core product behavior is working. | Demonstrate pods, Deployments, Services, health probes, and a rolling update. |
-| Ansible and Terraform | Use only small supporting automation tasks after core development. | Show a focused playbook and Terraform configuration that prepare the demo setup. |
-| Integration and monitoring | Connect pipeline and deployment steps; keep security and operations visible. | Show basic service health, logs, pipeline status, and rollback. |
+| Syllabus area                         | How it supports ContextOps development                                                      | Evidence in the finished project/demo                                                            |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Linux, shell, permissions, networking | Develop/run services in Linux; use shell helpers; understand file access and service ports. | Document local setup and show the app services communicating correctly.                          |
+| Git and GitHub workflows              | Use branches, commits, merges, pull requests, and conflict resolution while developing.     | Show source-code pull requests; approved context is versioned in GitHub after ContextOps review. |
+| Jenkins CI/CD                         | Use Jenkins to check and build the application as it changes.                               | Show validation, build, image creation, and approved-context publishing stages.                  |
+| Docker and Compose                    | Package services and use Compose for local development.                                     | Demonstrate the app running in containers on a developer machine.                                |
+| Kubernetes                            | Learn deployment concepts after core product behavior is working.                           | Demonstrate pods, Deployments, Services, health probes, and a rolling update.                    |
+| Ansible and Terraform                 | Use only small supporting automation tasks after core development.                          | Show a focused playbook and Terraform configuration that prepare the demo setup.                 |
+| Integration and monitoring            | Connect pipeline and deployment steps; keep security and operations visible.                | Show basic service health, logs, pipeline status, and rollback.                                  |
 
 The original scope names GitHub Actions. For stronger alignment with this syllabus, plan Jenkins as the main course pipeline unless the mentor approves GitHub Actions instead. Configure an automated pull-request trigger and show a failed check blocking publication.
 
@@ -170,16 +172,16 @@ These are small course demonstrations attached to ContextOps. Complete the produ
 
 Use this as a planning estimate and adjust to the time available.
 
-| Stage | Focus | Target result |
-|---|---|---|
-| 1 | Knowledge model, repository layout, user flow | Stable design and sample context records. |
-| 2 | Project setup, records, browsing, search | A usable context dashboard. |
-| 3 | Pull-request proposals and validation | Reviewed, checked context changes. |
-| 4 | Approved releases and MCP retrieval | Independent AI clients retrieve trusted context. |
-| 5 | Project State, history, rollback | Handoffs and recovery work. |
-| 6 | Docker, Jenkins, Kubernetes, basic monitoring | Product is packaged and demonstrable. |
-| 7 | Small Ansible/Terraform additions and report | Course evidence is complete without distracting from the product. |
-| 8 | Organization, teams, and access | Multiple projects and their members have clear access boundaries. |
+| Stage | Focus                                         | Target result                                                     |
+| ----- | --------------------------------------------- | ----------------------------------------------------------------- |
+| 1     | Knowledge model, repository layout, user flow | Stable design and sample context records.                         |
+| 2     | Project setup, records, browsing, search      | A usable context dashboard.                                       |
+| 3     | Pull-request proposals and validation         | Reviewed, checked context changes.                                |
+| 4     | Approved releases and MCP retrieval           | Independent AI clients retrieve trusted context.                  |
+| 5     | Project State, history, rollback              | Handoffs and recovery work.                                       |
+| 6     | Docker, Jenkins, Kubernetes, basic monitoring | Product is packaged and demonstrable.                             |
+| 7     | Small Ansible/Terraform additions and report  | Course evidence is complete without distracting from the product. |
+| 8     | Organization, teams, and access               | Multiple projects and their members have clear access boundaries. |
 
 If the available time is short, reduce dashboard polish and infrastructure depth before cutting the proposal, approval, published-context, MCP retrieval, or rollback flow. These are the defining parts of ContextOps.
 
@@ -222,19 +224,19 @@ Keep advanced semantic conflict resolution, automatic extraction from all conver
 
 These are planning decisions for the first version. They can be adjusted if a course requirement or mentor feedback requires it.
 
-| Area | Planned choice | Role in ContextOps |
-|---|---|---|
-| Web dashboard | Next.js | User interface for projects, knowledge records, proposals, and release history. |
-| UI components | shadcn/ui | Reusable buttons, forms, tables, dialogs, and other dashboard components. |
-| Backend | NestJS | API, GitHub integration, context validation/release operations, and MCP service. |
-| Knowledge source of truth | GitHub repository with Markdown/YAML | Stores reviewable context records and Git history. |
-| Development OS | Ubuntu through WSL on Windows | Linux environment for development and syllabus Linux practice. |
-| Local app runtime | Docker Compose | Runs the dashboard and backend services locally during development. |
-| Deployment demo | Local Kubernetes cluster | Demonstrates container orchestration after the core app works. |
-| Terraform role | Manage the demo application's Kubernetes resources in the existing local cluster | Demonstrates providers, resources, and state without requiring paid cloud infrastructure. |
-| Ansible role | Configure the Linux demo environment and deployment prerequisites | Demonstrates inventory and playbooks through a small repeatable setup task. |
-| CI/CD | Jenkins as the main course-alignment pipeline | Validates changes, builds the app image, and supports approved context publishing. |
-| Monitoring | Basic Prometheus/Grafana service health, with logs | Shows whether the demo services are running and helps inspect failures. |
+| Area                      | Planned choice                                                                   | Role in ContextOps                                                                        |
+| ------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Web dashboard             | Next.js                                                                          | User interface for projects, knowledge records, proposals, and release history.           |
+| UI components             | shadcn/ui                                                                        | Reusable buttons, forms, tables, dialogs, and other dashboard components.                 |
+| Backend                   | NestJS                                                                           | API, GitHub integration, context validation/release operations, and MCP service.          |
+| Knowledge source of truth | GitHub repository with Markdown/YAML                                             | Stores reviewable context records and Git history.                                        |
+| Development OS            | Ubuntu through WSL on Windows                                                    | Linux environment for development and syllabus Linux practice.                            |
+| Local app runtime         | Docker Compose                                                                   | Runs the dashboard and backend services locally during development.                       |
+| Deployment demo           | Local Kubernetes cluster                                                         | Demonstrates container orchestration after the core app works.                            |
+| Terraform role            | Manage the demo application's Kubernetes resources in the existing local cluster | Demonstrates providers, resources, and state without requiring paid cloud infrastructure. |
+| Ansible role              | Configure the Linux demo environment and deployment prerequisites                | Demonstrates inventory and playbooks through a small repeatable setup task.               |
+| CI/CD                     | Jenkins as the main course-alignment pipeline                                    | Validates changes, builds the app image, and supports approved context publishing.        |
+| Monitoring                | Basic Prometheus/Grafana service health, with logs                               | Shows whether the demo services are running and helps inspect failures.                   |
 
 ### Build priority
 
@@ -244,6 +246,3 @@ These are planning decisions for the first version. They can be adjusted if a co
 4. Add the small Terraform and Ansible demonstrations, then basic monitoring and final documentation.
 
 This document is a plan, not a record of completed implementation. Confirm with the mentor whether Jenkins is required instead of GitHub Actions and whether the proposed local Kubernetes, Terraform, and Ansible demonstrations satisfy the course expectations.
-
-
-

@@ -9,8 +9,8 @@ export class ContextService {
     private readonly repository: ContextRepository,
   ) {}
 
-  async list(userId: string, query?: string, type?: string) {
-    const source = await this.repository.listApproved(userId);
+  async list(userId: string, query?: string, type?: string, ref?: string) {
+    const source = await this.repository.listApproved(userId, ref);
     const normalizedQuery = query?.trim().toLocaleLowerCase();
 
     const items = source.items.filter((record) => {

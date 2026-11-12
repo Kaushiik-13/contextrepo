@@ -482,7 +482,7 @@ export class GithubService {
     return Array.isArray(result) || result.type === 'dir';
   }
 
-  async readContextFiles(userId: string) {
+  async readContextFiles(userId: string, pinnedRef?: string) {
     const projectResult = await this.db.query<{
       id: string;
       repository_id: string;
@@ -506,6 +506,23 @@ export class GithubService {
       userId,
       Number(project.repository_id),
     );
+    let commitSha = pinnedRef;
+    if (!commitSha) {
+      const headResponse = await fetch(
+        `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/commits/${encodeURIComponent(project.default_branch)}`,
+        { headers: this.githubHeaders(access.token) },
+      );
+      if (!headResponse.ok)
+        throw new BadGatewayException(
+          'Could not resolve the current GitHub context version.',
+        );
+      const head = (await headResponse.json()) as { sha?: string };
+      if (!head.sha)
+        throw new BadGatewayException(
+          'GitHub did not return a context version.',
+        );
+      commitSha = head.sha;
+    }
     const warnings: string[] = [];
     const files: Array<{ path: string; content: string }> = [];
     const apiRoot = `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/contents`;
@@ -519,7 +536,7 @@ export class GithubService {
         .map((part) => encodeURIComponent(part))
         .join('/');
       const url = new URL(`${apiRoot}/${encodedPath}`);
-      url.searchParams.set('ref', project.default_branch);
+      url.searchParams.set('ref', commitSha);
       const response = await fetch(url, {
         headers: this.githubHeaders(access.token),
       });
@@ -577,7 +594,7 @@ export class GithubService {
             .map((part) => encodeURIComponent(part))
             .join('/');
           const fileUrl = new URL(`${apiRoot}/${filePath}`);
-          fileUrl.searchParams.set('ref', project.default_branch);
+          fileUrl.searchParams.set('ref', commitSha);
           const fileResponse = await fetch(fileUrl, {
             headers: this.githubHeaders(access.token),
           });
@@ -613,7 +630,41 @@ export class GithubService {
       projectId: project.id,
       repository: project.full_name,
       branch: project.default_branch,
+      commitSha,
     };
+  }
+
+  async currentContextHead(userId: string) {
+    const result = await this.db.query<{
+      repository_id: string;
+      owner: string;
+      name: string;
+      default_branch: string;
+    }>(
+      `SELECT repository_id,owner,name,default_branch FROM connected_projects WHERE user_id=$1 LIMIT 1`,
+      [userId],
+    );
+    if (!result.rowCount)
+      throw new NotFoundException(
+        'Connect a project before requesting context.',
+      );
+    const project = result.rows[0];
+    const access = await this.selectedInstallation(
+      userId,
+      Number(project.repository_id),
+    );
+    const response = await fetch(
+      `https://api.github.com/repos/${encodeURIComponent(project.owner)}/${encodeURIComponent(project.name)}/commits/${encodeURIComponent(project.default_branch)}`,
+      { headers: this.githubHeaders(access.token) },
+    );
+    if (!response.ok)
+      throw new BadGatewayException(
+        'Could not resolve the current GitHub context version.',
+      );
+    const body = (await response.json()) as { sha?: string };
+    if (!body.sha)
+      throw new BadGatewayException('GitHub did not return a context version.');
+    return { commitSha: body.sha, branch: project.default_branch };
   }
 
   async createContextReadme(
@@ -710,6 +761,7 @@ export class GithubService {
     return {
       path: result.content?.path ?? path,
       commitSha: result.commit?.sha ?? '',
+      branch: project.default_branch,
     };
   }
 

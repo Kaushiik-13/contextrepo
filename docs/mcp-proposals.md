@@ -1,10 +1,12 @@
 # Submit ContextOps drafts from an AI assistant
 
-ContextOps exposes a Streamable HTTP MCP endpoint for creating proposal drafts.
+ContextOps exposes a Streamable HTTP MCP endpoint for creating proposal drafts and searching approved context.
 
 - Endpoint: `http://localhost:4000/api/mcp` for local development.
-- Tool: `submit_context_proposal`.
+- Tools: `submit_context_proposal` and `search_approved_context`.
+- `search_approved_context` can filter by words and optional context type. It searches the active commit-pinned snapshot and returns its commit SHA and source file path.
 - The tool stores a draft in Supabase. It does not approve, reject, read, or publish context.
+- Search returns only validated `approved` Markdown records. Drafts and rejected proposals are omitted.
 - A person signs in to ContextOps, reviews the proposal on the Proposals page, then approves or rejects it.
 - Approval writes a Markdown file with YAML front matter to the selected repository and default branch.
 
@@ -25,4 +27,4 @@ The tool accepts a title, one of the seven context types, question, summary, rat
 
 ## Database
 
-Apply `apps/api/database/migrations/004_proposal_review_mcp.sql` in the Supabase SQL editor after migration `003_context_proposal_drafts.sql`. This adds review states and GitHub publication metadata to proposals, plus a table for hashed, revocable MCP keys. Do not put the raw MCP key in SQL or `.env`.
+Apply `apps/api/database/migrations/004_proposal_review_mcp.sql` after `003_context_proposal_drafts.sql`, then apply `apps/api/database/migrations/005_active_context_release.sql`. Migration 005 stores the active approved Git commit for each project. Do not put the raw MCP key in SQL or `.env`.

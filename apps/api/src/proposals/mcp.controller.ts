@@ -31,6 +31,34 @@ export class McpController {
 
     const server = new McpServer({ name: 'contextops', version: '1.0.0' });
     server.tool(
+      'search_approved_context',
+      'Search the active, approved project context snapshot. Drafts and rejected proposals are never returned. Results include the GitHub source path and pinned commit version.',
+      {
+        query: z.string().max(500).optional(),
+        type: z
+          .enum([
+            'decision',
+            'requirement',
+            'constraint',
+            'research',
+            'rejected-approach',
+            'open-question',
+            'project-state',
+          ])
+          .optional(),
+      },
+      async ({ query, type }) => {
+        const result = await this.proposals.searchApprovedContext(
+          userId,
+          query,
+          type,
+        );
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+        };
+      },
+    );
+    server.tool(
       'submit_context_proposal',
       'Save a proposed project context record as a draft in ContextOps. A person must review and approve it in ContextOps; this tool cannot approve or publish.',
       {

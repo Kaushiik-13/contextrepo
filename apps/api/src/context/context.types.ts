@@ -26,18 +26,20 @@ export interface ContextRecord {
   alternatives: string[];
   discussionSummary: string;
   sourceReferences: string[];
+  sourcePath?: string;
 }
 
 export interface ContextReadResult {
   items: ContextRecord[];
   repository: string;
   branch: string;
+  commitSha: string;
   contextFolderExists: boolean;
   warnings: string[];
 }
 
 export interface ContextRepository {
-  listApproved(userId: string): Promise<ContextReadResult>;
+  listApproved(userId: string, ref?: string): Promise<ContextReadResult>;
 }
 
 export const CONTEXT_REPOSITORY = Symbol('CONTEXT_REPOSITORY');

@@ -12,5 +12,6 @@ import { CONTEXT_REPOSITORY } from './context.types';
     ContextService,
     { provide: CONTEXT_REPOSITORY, useClass: GithubContextRepository },
   ],
+  exports: [ContextService],
 })
 export class ContextModule {}

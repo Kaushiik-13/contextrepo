@@ -13,8 +13,8 @@ import {
 export class GithubContextRepository implements ContextRepository {
   constructor(private readonly github: GithubService) {}
 
-  async listApproved(userId: string): Promise<ContextReadResult> {
-    const source = await this.github.readContextFiles(userId);
+  async listApproved(userId: string, ref?: string): Promise<ContextReadResult> {
+    const source = await this.github.readContextFiles(userId, ref);
     const warnings = [...source.warnings];
     const records: ContextRecord[] = [];
 
@@ -43,7 +43,7 @@ export class GithubContextRepository implements ContextRepository {
           continue;
         }
         recordIds.add(record.id);
-        records.push(record);
+        records.push({ ...record, sourcePath: file.path });
       } catch {
         warnings.push(`${file.path}: could not parse the YAML front matter.`);
       }
@@ -56,6 +56,7 @@ export class GithubContextRepository implements ContextRepository {
       items: records,
       repository: source.repository,
       branch: source.branch,
+      commitSha: source.commitSha,
       contextFolderExists: source.contextFolderExists,
       warnings,
     };
